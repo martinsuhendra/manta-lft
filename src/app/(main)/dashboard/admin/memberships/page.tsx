@@ -1,13 +1,29 @@
 "use client";
 
+import * as React from "react";
+
 import { RoleGuard } from "@/components/role-guard";
 import { useAdminMemberships } from "@/hooks/use-admin-memberships-query";
 import { USER_ROLES } from "@/lib/types";
 
 import { MembershipsTable } from "./_components/memberships-table";
+import type { PurchaseRecencyFilterValue } from "./_components/purchase-recency-filter";
 
 export default function AdminMembershipsPage() {
-  const { data: memberships = [], isLoading, error } = useAdminMemberships();
+  const [purchaseRecency, setPurchaseRecency] = React.useState<PurchaseRecencyFilterValue>("all");
+  const [createdFrom, setCreatedFrom] = React.useState("");
+  const [createdTo, setCreatedTo] = React.useState("");
+  const [productId, setProductId] = React.useState("");
+  const {
+    data: memberships = [],
+    isLoading,
+    error,
+  } = useAdminMemberships({
+    purchaseRecency,
+    createdFrom,
+    createdTo,
+    productId,
+  });
 
   if (error) {
     return (
@@ -31,7 +47,18 @@ export default function AdminMembershipsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Memberships</h1>
           <p className="text-muted-foreground">Create, view, edit, and delete user memberships across the platform.</p>
         </div>
-        <MembershipsTable data={memberships} isLoading={isLoading} />
+        <MembershipsTable
+          data={memberships}
+          isLoading={isLoading}
+          purchaseRecency={purchaseRecency}
+          onPurchaseRecencyChange={setPurchaseRecency}
+          createdFrom={createdFrom}
+          createdTo={createdTo}
+          onCreatedFromChange={setCreatedFrom}
+          onCreatedToChange={setCreatedTo}
+          productId={productId}
+          onProductIdChange={setProductId}
+        />
       </div>
     </RoleGuard>
   );

@@ -2,8 +2,12 @@
   "buildCommand": "prisma generate && next build",
   "crons": [
     {
+      "path": "/api/cron/expire-memberships",
+      "schedule": "0 17 * * *"
+    },
+    {
       "path": "/api/cron/reactivate-frozen-memberships",
-      "schedule": "0 0 * * *"
+      "schedule": "5 17 * * *"
     }
   ],
   "functions": {

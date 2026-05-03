@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import type { Prisma } from "@prisma/client";
+import { endOfDay, isValid, parse, startOfDay, subDays, subMonths, subYears } from "date-fns";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
@@ -7,6 +9,11 @@ import { authOptions } from "@/auth";
 import { getMembershipWhereForBrandAccess, requireBrandAccess } from "@/lib/api-utils";
 import { prisma } from "@/lib/generated/prisma";
 import { USER_ROLES } from "@/lib/types";
+
+const purchaseRecencySchema = z.enum(["all", "7d", "1m", "3m", "1y"]);
+
+const isoDateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected yyyy-MM-dd");
+const uuidSchema = z.string().uuid("Invalid UUID");
 
 const createMembershipSchema = z.object({
   userId: z.string().uuid("Invalid user ID"),
@@ -29,10 +36,78 @@ export async function GET(request: NextRequest) {
 
     const { error, brandIds } = await requireBrandAccess(request);
     if (error) return error;
-    const whereBrand = getMembershipWhereForBrandAccess(request, brandIds);
+
+    const purchaseRecencyParam = request.nextUrl.searchParams.get("purchaseRecency") ?? "all";
+    const purchaseRecency = purchaseRecencySchema.safeParse(purchaseRecencyParam);
+    if (!purchaseRecency.success) {
+      return NextResponse.json({ error: "Invalid purchaseRecency" }, { status: 400 });
+    }
+
+    const createdFromParam = request.nextUrl.searchParams.get("createdFrom")?.trim() || undefined;
+    const createdToParam = request.nextUrl.searchParams.get("createdTo")?.trim() || undefined;
+    const productIdParam = request.nextUrl.searchParams.get("productId")?.trim() || undefined;
+
+    if (createdFromParam !== undefined && !isoDateOnly.safeParse(createdFromParam).success) {
+      return NextResponse.json({ error: "Invalid createdFrom" }, { status: 400 });
+    }
+    if (createdToParam !== undefined && !isoDateOnly.safeParse(createdToParam).success) {
+      return NextResponse.json({ error: "Invalid createdTo" }, { status: 400 });
+    }
+    if (productIdParam !== undefined && !uuidSchema.safeParse(productIdParam).success) {
+      return NextResponse.json({ error: "Invalid productId" }, { status: 400 });
+    }
+
+    const hasCreatedRange = createdFromParam !== undefined || createdToParam !== undefined;
+
+    let whereCombined: Prisma.MembershipWhereInput = getMembershipWhereForBrandAccess(request, brandIds);
+    if (productIdParam) {
+      const clauses: Prisma.MembershipWhereInput[] = [];
+      if (Object.keys(whereCombined).length > 0) clauses.push(whereCombined);
+      clauses.push({ productId: productIdParam });
+      whereCombined = clauses.length === 1 ? clauses[0] : { AND: clauses };
+    }
+
+    if (hasCreatedRange) {
+      const createdAtFilter: Prisma.DateTimeFilter = {};
+      if (createdFromParam) {
+        const d = parse(createdFromParam, "yyyy-MM-dd", new Date());
+        if (!isValid(d)) return NextResponse.json({ error: "Invalid createdFrom" }, { status: 400 });
+        createdAtFilter.gte = startOfDay(d);
+      }
+      if (createdToParam) {
+        const d = parse(createdToParam, "yyyy-MM-dd", new Date());
+        if (!isValid(d)) return NextResponse.json({ error: "Invalid createdTo" }, { status: 400 });
+        createdAtFilter.lte = endOfDay(d);
+      }
+      if (createdAtFilter.gte && createdAtFilter.lte && createdAtFilter.gte > createdAtFilter.lte) {
+        return NextResponse.json({ error: "createdFrom must be before or equal to createdTo" }, { status: 400 });
+      }
+
+      const clauses: Prisma.MembershipWhereInput[] = [];
+      if (Object.keys(whereCombined).length > 0) clauses.push(whereCombined);
+      clauses.push({ createdAt: createdAtFilter });
+
+      whereCombined = clauses.length === 1 ? clauses[0] : { AND: clauses };
+    } else if (purchaseRecency.data !== "all") {
+      const now = new Date();
+      const periodStart =
+        purchaseRecency.data === "7d"
+          ? subDays(now, 7)
+          : purchaseRecency.data === "1m"
+            ? subMonths(now, 1)
+            : purchaseRecency.data === "3m"
+              ? subMonths(now, 3)
+              : subYears(now, 1);
+
+      const clauses: Prisma.MembershipWhereInput[] = [];
+      if (Object.keys(whereCombined).length > 0) clauses.push(whereCombined);
+      clauses.push({ createdAt: { gte: periodStart } });
+
+      whereCombined = clauses.length === 1 ? clauses[0] : { AND: clauses };
+    }
 
     const memberships = await prisma.membership.findMany({
-      where: whereBrand,
+      where: whereCombined,
       include: {
         membershipBrands: {
           select: {

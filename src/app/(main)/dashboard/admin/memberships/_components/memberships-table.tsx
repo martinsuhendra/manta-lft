@@ -14,6 +14,7 @@ import { createMembershipColumns } from "./columns";
 import { MembershipDetailDrawer } from "./membership-detail-drawer";
 import { MembershipsSearch } from "./memberships-search";
 import { MembershipsTableSkeleton } from "./memberships-table-skeleton";
+import { PurchaseRecencyFilter, type PurchaseRecencyFilterValue } from "./purchase-recency-filter";
 import { Membership } from "./schema";
 import { StatusFilter } from "./status-filter";
 
@@ -22,19 +23,35 @@ type DrawerMode = "view" | "edit" | "add" | null;
 interface MembershipsTableProps {
   data: Membership[];
   isLoading: boolean;
+  purchaseRecency: PurchaseRecencyFilterValue;
+  onPurchaseRecencyChange: (value: PurchaseRecencyFilterValue) => void;
+  createdFrom: string;
+  createdTo: string;
+  onCreatedFromChange: (isoDate: string) => void;
+  onCreatedToChange: (isoDate: string) => void;
+  productId: string;
+  onProductIdChange: (productId: string) => void;
 }
 
-export function MembershipsTable({ data, isLoading }: MembershipsTableProps) {
+export function MembershipsTable({
+  data,
+  isLoading,
+  purchaseRecency,
+  onPurchaseRecencyChange,
+  createdFrom,
+  createdTo,
+  onCreatedFromChange,
+  onCreatedToChange,
+  productId,
+  onProductIdChange,
+}: MembershipsTableProps) {
   const [selectedStatus, setSelectedStatus] = React.useState("all");
   const [selectedMembership, setSelectedMembership] = React.useState<Membership | null>(null);
   const [drawerMode, setDrawerMode] = React.useState<DrawerMode>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
-  // Filter data based on selected status
   const filteredData = React.useMemo(() => {
-    if (selectedStatus === "all") {
-      return data;
-    }
+    if (selectedStatus === "all") return data;
     return data.filter((membership) => membership.status === selectedStatus);
   }, [data, selectedStatus]);
 
@@ -78,12 +95,22 @@ export function MembershipsTable({ data, isLoading }: MembershipsTableProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
           <MembershipsSearch
             value={tableInstance.getState().globalFilter ?? ""}
             onChange={(value) => tableInstance.setGlobalFilter(String(value))}
           />
           <StatusFilter value={selectedStatus} onChange={setSelectedStatus} />
+          <PurchaseRecencyFilter
+            value={purchaseRecency}
+            onChange={onPurchaseRecencyChange}
+            createdFrom={createdFrom}
+            createdTo={createdTo}
+            onCreatedFromChange={onCreatedFromChange}
+            onCreatedToChange={onCreatedToChange}
+            productId={productId}
+            onProductIdChange={onProductIdChange}
+          />
         </div>
         <div className="flex items-center gap-2">
           <DataTableViewOptions table={tableInstance} />

@@ -21,6 +21,15 @@ export const membershipSchema = z.object({
     price: z.number(),
     validDays: z.number(),
   }),
+  transaction: z
+    .object({
+      id: z.string(),
+      status: z.string(),
+      amount: z.union([z.number(), z.string()]),
+      paidAt: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type Membership = z.infer<typeof membershipSchema>;

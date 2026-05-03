@@ -1,22 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { FREEZE_REQUEST_STATUS } from "@/lib/constants/freeze";
+import { isCronAuthorized } from "@/lib/cron-auth";
 import { prisma } from "@/lib/generated/prisma";
 import { MEMBERSHIP_STATUS } from "@/lib/types";
 
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return false;
-  }
-
-  return authHeader === `Bearer ${cronSecret}`;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -41,21 +31,36 @@ export async function GET(request: NextRequest) {
     }
 
     await prisma.$transaction(
-      expiredFreezes.flatMap((fr) => [
-        prisma.membership.update({
-          where: { id: fr.membershipId },
-          data: { status: MEMBERSHIP_STATUS.ACTIVE },
-        }),
-        prisma.membershipFreezeRequest.update({
-          where: { id: fr.id },
-          data: { status: FREEZE_REQUEST_STATUS.COMPLETED },
-        }),
-      ]),
+      expiredFreezes.flatMap((fr) => {
+        const membershipExpiredPastDue = fr.membership.expiredAt <= now;
+        return [
+          prisma.membership.update({
+            where: { id: fr.membershipId },
+            data: {
+              status: membershipExpiredPastDue ? MEMBERSHIP_STATUS.EXPIRED : MEMBERSHIP_STATUS.ACTIVE,
+            },
+          }),
+          prisma.membershipFreezeRequest.update({
+            where: { id: fr.id },
+            data: { status: FREEZE_REQUEST_STATUS.COMPLETED },
+          }),
+        ];
+      }),
     );
 
+    const markedExpiredPastDue = expiredFreezes.filter((fr) => fr.membership.expiredAt <= now).length;
+    const setActive = expiredFreezes.length - markedExpiredPastDue;
+
     return NextResponse.json({
-      message: `Reactivated ${expiredFreezes.length} frozen membership(s)`,
-      reactivated: expiredFreezes.length,
+      message:
+        expiredFreezes.length === 1
+          ? setActive === 1
+            ? "Reactivated 1 frozen membership"
+            : "Freeze ended — membership expired (past end date)"
+          : `Completed ${expiredFreezes.length} ended freeze(s): ${setActive} active, ${markedExpiredPastDue} expired`,
+      processed: expiredFreezes.length,
+      setActive,
+      markedExpiredPastDue,
     });
   } catch (error) {
     console.error("Error reactivating frozen memberships:", error);
