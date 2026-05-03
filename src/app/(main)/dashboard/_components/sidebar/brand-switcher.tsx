@@ -27,24 +27,24 @@ function BrandLogo({ logo, name, className }: { logo?: string | null; name: stri
   if (!shouldShowImage) {
     return (
       <span
-        className={`bg-muted text-muted-foreground inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${className ?? ""}`}
+        className={`bg-muted text-muted-foreground ring-border flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md ring-1 ${className ?? ""}`}
         aria-hidden="true"
       >
-        <ImageIcon className="h-4 w-4" />
+        <ImageIcon className="size-4" />
       </span>
     );
   }
 
   return (
     <span
-      className={`bg-muted relative inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-md border ${className ?? ""}`}
+      className={`bg-muted ring-border relative size-8 shrink-0 overflow-hidden rounded-md ring-1 ${className ?? ""}`}
     >
       <Image
         src={logo}
         alt={`${name} logo`}
         fill
-        sizes="32px"
-        className="object-cover"
+        sizes="96px"
+        className="object-cover object-center"
         onError={() => setIsImageBroken(true)}
       />
     </span>
@@ -78,7 +78,10 @@ export function BrandSwitcher() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton tooltip={currentLabel}>
+            <SidebarMenuButton
+              tooltip={currentLabel}
+              className="!h-auto min-h-8 py-2 group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!min-h-8 group-data-[collapsible=icon]:!p-0"
+            >
               {activeBrandId === ALL_ID ? (
                 <Building2 className="h-4 w-4 shrink-0" />
               ) : (
