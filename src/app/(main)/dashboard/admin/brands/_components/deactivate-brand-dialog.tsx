@@ -23,13 +23,13 @@ interface DeactivateBrandDialogProps {
 }
 
 export function DeactivateBrandDialog({ brand, open, onOpenChange }: DeactivateBrandDialogProps) {
-  const deleteBrand = useDeleteBrand(brand ? brand.id : "");
+  const deleteBrand = useDeleteBrand();
   const deleteError = deleteBrand.error as AxiosError<{ reasons?: string[]; error?: string }> | null;
   const reasons = deleteError?.response?.data.reasons ?? [];
 
   const handleDeactivate = () => {
-    if (!brand) return;
-    deleteBrand.mutate(undefined, {
+    if (!brand?.id) return;
+    deleteBrand.mutate(brand.id, {
       onSuccess: () => onOpenChange(false),
     });
   };

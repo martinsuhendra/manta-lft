@@ -5,7 +5,7 @@
  * It extracts `label:`, `value:`, and primary color definitions (`--primary`) for both light and dark modes.
  * These primary colors are used to visually represent each theme in the UI (e.g., colored dots or theme previews).
  * Default theme colors are fetched from /app/globals.css.
- * All extracted metadata is injected into a marked section of the /types/preferences/theme.ts file.
+ * All extracted metadata is injected into a marked section of the /types/preferences/theme-presets.ts file.
  *
  * Usage:
  * - During local development, run manually after adding any new theme preset:
@@ -26,7 +26,7 @@ if (!fs.existsSync(presetDir)) {
   process.exit(1);
 }
 
-const outputPath = path.resolve(__dirname, "../types/preferences/theme.ts");
+const outputPath = path.resolve(__dirname, "../types/preferences/theme-presets.ts");
 
 const files = fs.readdirSync(presetDir).filter((file) => file.endsWith(".css"));
 
@@ -79,15 +79,13 @@ try {
   process.exit(1);
 }
 
-const defaultLightPrimaryRegex = /:root\s*{[^}]*--primary:\s*([^;]+);/;
-const defaultDarkPrimaryRegex = /\.dark\s*{[^}]*--primary:\s*([^;]+);/;
-
-const defaultLightPrimaryMatch = defaultLightPrimaryRegex.exec(globalContent);
-const defaultDarkPrimaryMatch = defaultDarkPrimaryRegex.exec(globalContent);
+const defaultPrimaryFromRootRegex = /:root\s*{[\s\S]*?--primary:\s*([^;]+);/;
+const defaultPrimaryMatch = defaultPrimaryFromRootRegex.exec(globalContent);
+const primaryValue = defaultPrimaryMatch?.[1]?.trim() ?? "";
 
 const defaultPrimary = {
-  light: defaultLightPrimaryMatch?.[1]?.trim() ?? "",
-  dark: defaultDarkPrimaryMatch?.[1]?.trim() ?? "",
+  light: primaryValue,
+  dark: primaryValue,
 };
 
 presets.unshift({ label: "Default", value: "default", primary: defaultPrimary });
@@ -118,7 +116,7 @@ async function main() {
   }
 
   fs.writeFileSync(outputPath, formatted);
-  console.log("✅ theme.ts updated with new theme presets");
+  console.log("✅ theme-presets.ts updated with new theme presets");
 }
 
 main().catch((err) => {

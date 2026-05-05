@@ -8,6 +8,8 @@ import { authOptions } from "@/auth";
 import { requireBrandAccess } from "@/lib/api-utils";
 import { getBookingSettings, getSessionStartAt, isPastBookingCutoff } from "@/lib/booking-settings";
 import { getCapacityBookingStatuses } from "@/lib/booking-status";
+import { emailService } from "@/lib/email/service";
+import { createSessionJoinedTemplate } from "@/lib/email/templates";
 import { prisma } from "@/lib/generated/prisma";
 import { deductQuota } from "@/lib/quota-utils";
 import { resolveEligibleMembershipsForItem } from "@/lib/session-booking-eligibility";
@@ -47,7 +49,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const classSession = await prisma.classSession.findUnique({
       where: { id: sessionId },
-      include: { item: true },
+      include: {
+        item: true,
+        teacher: { select: { name: true, email: true } },
+      },
     });
 
     if (!classSession) {
@@ -190,6 +195,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       return b;
     });
+
+    if (user.email) {
+      try {
+        const sessionInfo = {
+          itemName: classSession.item.name,
+          date: classSession.date.toISOString(),
+          startTime: classSession.startTime,
+          endTime: classSession.endTime,
+          teacher: classSession.teacher ? { name: classSession.teacher.name, email: classSession.teacher.email } : null,
+          notes: classSession.notes,
+        };
+        const emailTemplate = createSessionJoinedTemplate(sessionInfo, user.name || user.email);
+        await emailService.sendEmail(user.email, emailTemplate);
+      } catch (emailError) {
+        console.error("Failed to send booking confirmation email:", emailError);
+      }
+    }
 
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {

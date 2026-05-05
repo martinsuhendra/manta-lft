@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api-utils";
 import { doesBookingStatusConsumeQuota, getCapacityBookingStatuses } from "@/lib/booking-status";
 import { emailService } from "@/lib/email/service";
-import { createSessionJoinedTemplate } from "@/lib/email/templates";
+import { createSessionPromotedFromWaitlistTemplate } from "@/lib/email/templates";
 import { prisma } from "@/lib/generated/prisma";
 import { checkQuotaAvailability, deductQuota, restoreQuota } from "@/lib/quota-utils";
 import { sumParticipantSlots } from "@/lib/session-utils";
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
           notes: classSession.notes,
         };
 
-        const emailTemplate = createSessionJoinedTemplate(
+        const emailTemplate = createSessionPromotedFromWaitlistTemplate(
           sessionInfo,
           result.waitlistedConfirmed.user.name || result.waitlistedConfirmed.user.email,
         );

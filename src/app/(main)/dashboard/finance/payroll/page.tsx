@@ -38,6 +38,8 @@ export default function PayrollPage() {
 
   const params = useMemo(() => getSummaryQueryParams(filters), [filters]);
 
+  const lockedTeacherId = isTeacher && userId ? userId : undefined;
+
   const { data, isLoading } = useQuery({
     queryKey: ["payroll-summary", params],
     queryFn: async () => {
@@ -64,6 +66,25 @@ export default function PayrollPage() {
 
   const summarySection = (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge
+          variant="secondary"
+          className="text-muted-foreground flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-normal"
+        >
+          <CalendarDays className="h-3.5 w-3.5 opacity-70" />
+          <span>
+            {format(parseISO(params.startDate), "MMM d, yyyy")} – {format(parseISO(params.endDate), "MMM d, yyyy")}
+          </span>
+        </Badge>
+        <PayrollFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          hideTeacherFilter={isTeacher}
+          hideItemFilter={isTeacher}
+          lockedTeacherId={lockedTeacherId}
+        />
+      </div>
+
       {!isTeacher && (
         <SectionCardsGrid columns={3}>
           <Card className="@container/card">
@@ -119,27 +140,6 @@ export default function PayrollPage() {
           </Card>
         </SectionCardsGrid>
       )}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <PayrollFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          hideTeacherFilter={isTeacher}
-          hideItemFilter={isTeacher}
-        />
-        {data?.period && (
-          <Badge
-            variant="secondary"
-            className="text-muted-foreground flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-normal"
-          >
-            <CalendarDays className="h-3.5 w-3.5 opacity-70" />
-            <span>
-              {format(parseISO(data.period.startDate), "MMM d, yyyy")} –{" "}
-              {format(parseISO(data.period.endDate), "MMM d, yyyy")}
-            </span>
-          </Badge>
-        )}
-      </div>
 
       <PayrollSummaryTable rows={data?.rows ?? []} grandTotalFee={data?.grandTotalFee ?? 0} isLoading={isLoading} />
     </div>

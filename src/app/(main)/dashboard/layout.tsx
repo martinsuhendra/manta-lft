@@ -7,6 +7,7 @@ import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sideb
 import { auth } from "@/auth";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { USER_ROLES } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
 import {
@@ -22,13 +23,16 @@ import { BrandProviderWrapper } from "./_components/brand-provider-wrapper";
 import { BrandThemeInjector } from "./_components/brand-theme-injector";
 import { AccountSwitcher } from "./_components/sidebar/account-switcher";
 import { SearchDialog } from "./_components/sidebar/search-dialog";
-import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
   const session = await auth();
 
   if (!session) {
     redirect("/sign-in");
+  }
+
+  if (session.user.role === USER_ROLES.MEMBER) {
+    redirect("/shop");
   }
 
   const cookieStore = await cookies();
@@ -70,7 +74,6 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
                 <SearchDialog />
               </div>
               <div className="flex items-center gap-2">
-                <ThemeSwitcher />
                 <AccountSwitcher users={[currentUser]} />
               </div>
             </div>

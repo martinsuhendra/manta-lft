@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       },
       include: {
         item: { select: { id: true, name: true, price: true } },
-        teacher: { select: { id: true, name: true, email: true } },
+        teacher: { select: { id: true, name: true, email: true, image: true } },
       },
     });
 
@@ -144,6 +144,7 @@ export async function GET(request: NextRequest) {
       itemId: string;
       itemName: string;
       sessionsCount: number;
+      sessionDates: string[];
       feeModel: TeacherFeeModel;
       feeAmount: number;
       perParticipantMinGuarantee: number | null;
@@ -159,6 +160,7 @@ export async function GET(request: NextRequest) {
         teacherId: string;
         teacherName: string;
         teacherEmail: string | null;
+        teacherImage: string | null;
         byItem: Map<string, ByItem>;
         totalFee: number;
       }
@@ -176,6 +178,7 @@ export async function GET(request: NextRequest) {
           teacherId: tid,
           teacherName: teacher.name ?? "—",
           teacherEmail: teacher.email ?? null,
+          teacherImage: teacher.image ?? null,
           byItem: new Map(),
           totalFee: 0,
         });
@@ -187,6 +190,7 @@ export async function GET(request: NextRequest) {
           itemId: s.item.id,
           itemName: s.item.name,
           sessionsCount: 0,
+          sessionDates: [],
           feeModel: config?.feeModel ?? "FLAT_PER_SESSION",
           feeAmount: config?.feeAmount ?? 0,
           perParticipantMinGuarantee: config?.perParticipantMinGuarantee ?? null,
@@ -198,6 +202,7 @@ export async function GET(request: NextRequest) {
       }
       const byItem = row.byItem.get(itemKey)!;
       byItem.sessionsCount += 1;
+      byItem.sessionDates.push(s.date.toISOString().slice(0, 10));
       if (config?.feeModel === "PER_PARTICIPANT") byItem.totalParticipants += pax;
       byItem.totalFee += sessionFee;
       row.totalFee += sessionFee;
@@ -207,13 +212,16 @@ export async function GET(request: NextRequest) {
       teacherId: r.teacherId,
       teacherName: r.teacherName,
       teacherEmail: r.teacherEmail,
+      teacherImage: r.teacherImage,
       sessionsCount: Array.from(r.byItem.values()).reduce((sum, b) => sum + b.sessionsCount, 0),
       byItem: Array.from(r.byItem.values()).map((b) => {
         const avgFeePerSession = b.sessionsCount > 0 ? b.totalFee / b.sessionsCount : 0;
+        const sessionDates = [...new Set(b.sessionDates)].sort();
         return {
           itemId: b.itemId,
           itemName: b.itemName,
           sessionsCount: b.sessionsCount,
+          sessionDates,
           feeModel: b.feeModel,
           feeAmount: b.feeAmount,
           perParticipantMinGuarantee: b.perParticipantMinGuarantee,

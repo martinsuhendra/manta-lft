@@ -2,7 +2,12 @@
 export type { EmailTemplate, brandColors, baseStyles } from "./base";
 
 // Auth-related templates
-export { createEmailVerificationTemplate, createPasswordResetTemplate, createWelcomeTemplate } from "./auth-templates";
+export {
+  createEmailVerificationTemplate,
+  createPasswordResetTemplate,
+  createSignupWelcomeTemplate,
+  createWelcomeTemplate,
+} from "./auth-templates";
 
 // Payment-related templates
 export {
@@ -16,7 +21,9 @@ export { createContactFormTemplate, createUserLinkTemplate } from "./general-tem
 
 // Session templates
 export {
+  createMemberBookingCancellationConfirmationTemplate,
   createSessionJoinedTemplate,
+  createSessionPromotedFromWaitlistTemplate,
   createSessionUpdatedTemplate,
   createSessionCancelledTemplate,
   createSessionWaitlistedTemplate,

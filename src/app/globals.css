@@ -43,53 +43,12 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Brand theme overridden by BrandThemeInjector when a brand is selected */
+/* Dark-only design tokens (`html` keeps class `dark` so Tailwind `dark:` variants apply) */
 :root {
+  color-scheme: dark;
   --brand-primary: #6366f1;
   --brand-accent: #8b5cf6;
   --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.32 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.32 0 0);
-  --primary: oklch(0.64 0.17 36.44);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0 264.54);
-  --secondary-foreground: oklch(0.45 0.03 256.8);
-  --muted: oklch(0.98 0 247.84);
-  --muted-foreground: oklch(0.55 0.02 264.36);
-  --accent: oklch(0.91 0.02 243.82);
-  --accent-foreground: oklch(0.38 0.14 265.52);
-  --destructive: oklch(0.64 0.21 25.33);
-  --border: oklch(0.9 0.01 247.88);
-  --input: oklch(0.97 0 264.54);
-  --ring: oklch(0.64 0.17 36.44);
-  --chart-1: oklch(0.72 0.06 248.68);
-  --chart-2: oklch(0.79 0.09 35.96);
-  --chart-3: oklch(0.58 0.08 254.16);
-  --chart-4: oklch(0.5 0.08 259.49);
-  --chart-5: oklch(0.42 0.1 264.03);
-  --sidebar: oklch(0.9 0 258.33);
-  --sidebar-foreground: oklch(0.32 0 0);
-  --sidebar-primary: oklch(0.64 0.17 36.44);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.91 0.02 243.82);
-  --sidebar-accent-foreground: oklch(0.38 0.14 265.52);
-  --sidebar-border: oklch(0.93 0.01 264.53);
-  --sidebar-ring: oklch(0.64 0.17 36.44);
-  --background: oklch(0.94 0 236.5);
-  --foreground: oklch(0.32 0 0);
-  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 8px 10px -1px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
-}
-
-.dark {
   --background: oklch(0.26 0.03 262.67);
   --foreground: oklch(0.92 0 0);
   --card: oklch(0.31 0.03 268.64);
@@ -318,21 +277,10 @@
   background-image:
     linear-gradient(
       135deg,
-      color-mix(in oklch, var(--primary) 14%, transparent) 0%,
-      color-mix(in oklch, var(--primary) 6%, transparent) 25%,
-      transparent 55%
-    ),
-    url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='4' cy='4' r='1' fill='%23000' fill-opacity='0.04'/%3E%3Ccircle cx='20' cy='4' r='1' fill='%23000' fill-opacity='0.04'/%3E%3Ccircle cx='4' cy='20' r='1' fill='%23000' fill-opacity='0.04'/%3E%3Ccircle cx='20' cy='20' r='1' fill='%23000' fill-opacity='0.04'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}
-
-.dark .sporty-section-fill {
-  background-image:
-    linear-gradient(
-      135deg,
       color-mix(in oklch, var(--primary) 18%, transparent) 0%,
       color-mix(in oklch, var(--primary) 8%, transparent) 25%,
       transparent 55%
     ),
     url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='4' cy='4' r='1' fill='%23fff' fill-opacity='0.04'/%3E%3Ccircle cx='20' cy='4' r='1' fill='%23fff' fill-opacity='0.04'/%3E%3Ccircle cx='4' cy='20' r='1' fill='%23fff' fill-opacity='0.04'/%3E%3Ccircle cx='20' cy='20' r='1' fill='%23fff' fill-opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
