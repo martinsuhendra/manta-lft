@@ -1,3 +1,5 @@
+import { escapeHtml } from "../utils";
+
 import { EmailTemplate, baseStyles } from "./base";
 
 export function createEmailVerificationTemplate(verificationUrl: string): EmailTemplate {
@@ -155,6 +157,55 @@ export function createWelcomeTemplate(name: string, dashboardUrl?: string): Emai
 
   return {
     subject: "Welcome to Manta! 🎉",
+    html,
+    text,
+  };
+}
+
+/** Sent immediately after a customer completes self-service sign-up (credentials registration). */
+export function createSignupWelcomeTemplate(name: string, shopUrl: string): EmailTemplate {
+  const safeName = escapeHtml(name);
+  const year = new Date().getFullYear();
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      ${baseStyles}
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="header">
+          <h1 class="logo">Manta</h1>
+        </div>
+        <div class="content">
+          <h2>Welcome, ${safeName}!</h2>
+          <p>Your Manta account is ready. You can browse classes, book sessions, and manage your membership any time.</p>
+          <a href="${shopUrl}" class="button">Browse classes</a>
+          <p>Thank you for joining us — we look forward to seeing you in the studio.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${year} Manta. All rights reserved.</p>
+          <p>This is an automated email. Please do not reply to this message.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+Welcome, ${name}!
+
+Your Manta account is ready. You can browse classes, book sessions, and manage your membership any time.
+
+Open the shop: ${shopUrl}
+
+Thank you for joining us — we look forward to seeing you in the studio.
+
+© ${year} Manta. All rights reserved.
+  `.trim();
+
+  return {
+    subject: "Welcome to Manta — your account is ready",
     html,
     text,
   };

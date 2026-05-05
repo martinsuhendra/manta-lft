@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
+import { USER_ROLES } from "@/lib/types";
 
 export async function middleware(request: NextRequest) {
   const { nextUrl } = request;
@@ -28,6 +29,11 @@ export async function middleware(request: NextRequest) {
   if (!isLoggedIn && isProtectedRoute) {
     const callbackUrl = nextUrl.pathname + nextUrl.search;
     return NextResponse.redirect(new URL(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
+  }
+
+  // Members use /shop only — block direct navigation or stale sessions hitting /dashboard
+  if (isLoggedIn && isProtectedRoute && token.role === USER_ROLES.MEMBER) {
+    return NextResponse.redirect(new URL("/shop", nextUrl));
   }
 
   const response = NextResponse.next();

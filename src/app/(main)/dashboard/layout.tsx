@@ -7,6 +7,7 @@ import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sideb
 import { auth } from "@/auth";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { USER_ROLES } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
 import {
@@ -28,6 +29,10 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
 
   if (!session) {
     redirect("/sign-in");
+  }
+
+  if (session.user.role === USER_ROLES.MEMBER) {
+    redirect("/shop");
   }
 
   const cookieStore = await cookies();
