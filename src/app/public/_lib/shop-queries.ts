@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 
 import { prisma } from "@/lib/generated/prisma";
 import { mapSessionWithCapacity } from "@/lib/session-utils";
@@ -20,9 +20,11 @@ export async function getClasses(brandId?: string) {
         capacity: true,
         color: true,
         image: true,
+        isActive: true,
+        isPublic: true,
       },
     });
-    return classes;
+    return classes.filter((c) => c.isActive && c.isPublic);
   } catch (error) {
     console.error("Failed to fetch classes:", error);
     return [];
@@ -69,15 +71,15 @@ export async function getActiveProducts(brandId?: string) {
 
 export async function getUpcomingSessions(brandId?: string) {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeek = addDays(today, 7);
+    /** Landing `#schedule` uses `todayOnly` — fetch all of today only (avoid week window + limit hiding rows). */
+    const dayStart = startOfDay(new Date());
+    const dayEnd = addDays(dayStart, 1);
 
     const sessions = await prisma.classSession.findMany({
       where: {
         date: {
-          gte: today,
-          lte: nextWeek,
+          gte: dayStart,
+          lt: dayEnd,
         },
         status: "SCHEDULED",
         item: {
@@ -109,7 +111,6 @@ export async function getUpcomingSessions(brandId?: string) {
         },
       },
       orderBy: [{ date: "asc" }, { startTime: "asc" }],
-      take: 10,
     });
 
     return sessions.map(mapSessionWithCapacity);

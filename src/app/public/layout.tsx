@@ -97,7 +97,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                     </a>
                   </li>
                   <li>
-                    <a href="/shop/schedule" className="hover:text-primary transition-colors">
+                    <a href="/public/schedule" className="hover:text-primary transition-colors">
                       Schedule
                     </a>
                   </li>
@@ -107,7 +107,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                     </a>
                   </li>
                   <li>
-                    <a href="/shop/book" className="hover:text-primary transition-colors">
+                    <a href="/public/book" className="hover:text-primary transition-colors">
                       Book a Class
                     </a>
                   </li>

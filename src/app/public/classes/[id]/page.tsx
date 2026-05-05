@@ -120,7 +120,7 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
             The class you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <Button asChild className="mt-6">
-            <Link href="/shop">Back to Shop</Link>
+            <Link href="/public">Back to Shop</Link>
           </Button>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default async function ClassDetailPage({ params }: ClassDetailPageProps) 
       <div className="border-b bg-slate-50 dark:bg-slate-950">
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <Link
-            href="/shop#classes"
+            href="/public#classes"
             className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2 text-sm sm:mb-6"
           >
             <ArrowLeft className="h-4 w-4" />

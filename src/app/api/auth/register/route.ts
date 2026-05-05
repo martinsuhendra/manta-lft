@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     });
 
     const appBase = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "";
-    const shopUrl = appBase ? `${appBase}/shop` : "#";
+    const shopUrl = appBase ? `${appBase}/public` : "#";
     try {
       const welcomeTemplate = createSignupWelcomeTemplate(name, shopUrl);
       const sent = await emailService.sendEmail(email, welcomeTemplate);

@@ -121,7 +121,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
         toast.success("Membership activated!", {
           description: "Your free trial is active immediately.",
         });
-        router.push("/shop/my-account");
+        router.push("/public/my-account");
         return;
       }
 
@@ -140,13 +140,13 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
             toast.success("Payment successful!", {
               description: "Your membership has been activated.",
             });
-            router.push("/shop/my-account");
+            router.push("/public/my-account");
           },
           onPending: () => {
             toast.info("Payment pending", {
               description: "Waiting for payment confirmation. You can check the status in My Account.",
             });
-            router.push("/shop/my-account");
+            router.push("/public/my-account");
           },
           onError: () => {
             toast.error("Payment failed", {

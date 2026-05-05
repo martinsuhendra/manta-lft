@@ -20,11 +20,11 @@ export default async function BookPage() {
   const session = await auth();
 
   if (!session?.user.id) {
-    redirect("/shop");
+    redirect("/public");
   }
 
   if (session.user.role !== USER_ROLES.MEMBER) {
-    redirect("/shop");
+    redirect("/public");
   }
 
   const activeBrandId = await resolveActiveBrandIdFromCookie();

@@ -55,7 +55,7 @@ export function LoginForm() {
         await new Promise((resolve) => setTimeout(resolve, 100));
         const session = await getSession();
         const role = session?.user.role;
-        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/shop";
+        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/public";
         router.push(redirectPath);
         router.refresh();
       }

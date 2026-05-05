@@ -40,7 +40,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
   const [signInOpen, setSignInOpen] = useState(false);
 
   // Pages that start with a dark section where we want transparent header
-  const isDarkHeroPage = pathname === "/shop" || pathname === "/shop/schedule";
+  const isDarkHeroPage = pathname === "/public" || pathname === "/public/schedule";
 
   useEffect(() => {
     setMounted(true);
@@ -54,7 +54,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/shop" });
+    await signOut({ callbackUrl: "/public" });
   };
 
   const isTransparent = isDarkHeroPage && !isScrolled;
@@ -71,7 +71,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
       )}
     >
       <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-5 sm:px-4 sm:py-6">
-        <Link href="/shop" className="group flex shrink-0 items-center gap-2">
+        <Link href="/public" className="group flex shrink-0 items-center gap-2">
           <div className="relative h-8 w-8 transition-transform group-hover:scale-110">
             <Image src="/manta-logo.jpg" alt="Manta logo" fill sizes="32px" priority />
           </div>
@@ -92,7 +92,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
             <>
               <ShopBrandSwitcher />
               {session.user.role === "MEMBER" && (
-                <Link href="/shop/book">
+                <Link href="/public/book">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -105,7 +105,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
                   </Button>
                 </Link>
               )}
-              <Link href="/shop/my-account">
+              <Link href="/public/my-account">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -191,14 +191,14 @@ export function ShopHeader({ session }: ShopHeaderProps) {
                     <ShopBrandSwitcher mobile />
                   </div>
                   {session.user.role === "MEMBER" && (
-                    <Link href="/shop/book">
+                    <Link href="/public/book">
                       <DropdownMenuItem className="cursor-pointer">
                         <Calendar className="mr-2 h-4 w-4" />
                         <span>Book a class</span>
                       </DropdownMenuItem>
                     </Link>
                   )}
-                  <Link href="/shop/my-account">
+                  <Link href="/public/my-account">
                     <DropdownMenuItem className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       <span>My Account</span>

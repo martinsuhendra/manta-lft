@@ -11,27 +11,12 @@ import { mapSessionWithCapacity } from "@/lib/session-utils";
 
 import { ScheduleFilters } from "../_components/schedule-filters";
 import { UpcomingSessions } from "../_components/upcoming-sessions";
+import { getClasses } from "../_lib/shop-queries";
 
 export const metadata: Metadata = {
   title: `${APP_CONFIG.name} - Full Schedule`,
   description: "View our upcoming class schedule.",
 };
-
-async function getClasses(brandId?: string) {
-  try {
-    const items = await prisma.item.findMany({
-      where: {
-        isActive: true,
-        isPublic: true,
-        ...(brandId ? { itemBrands: { some: { brandId } } } : {}),
-      },
-      select: { id: true, name: true },
-    });
-    return items;
-  } catch {
-    return [];
-  }
-}
 
 async function getFullSchedule(start?: string, end?: string, itemId?: string, brandId?: string) {
   try {
@@ -98,10 +83,11 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const itemId = typeof params.item === "string" ? params.item : undefined;
 
   const activeBrandId = await resolveActiveBrandIdFromCookie();
-  const [sessions, classes] = await Promise.all([
+  const [sessions, classItems] = await Promise.all([
     getFullSchedule(start, end, itemId, activeBrandId ?? undefined),
     getClasses(activeBrandId ?? undefined),
   ]);
+  const classes = classItems.map(({ id, name }) => ({ id, name }));
 
   return (
     <>

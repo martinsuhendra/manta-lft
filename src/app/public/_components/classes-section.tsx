@@ -59,55 +59,55 @@ export function ClassesSection({ classes }: ClassesSectionProps) {
           </Button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((item) => {
             const features = getClassFeatures(item);
             const accentColor = item.color ?? "var(--primary)";
             return (
               <div
                 key={item.id}
-                className="group border-border bg-card relative overflow-hidden rounded-[2rem] border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                className="group border-border bg-card relative min-w-0 overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="relative aspect-[16/9] overflow-hidden">
+                <div className="relative h-[160px] w-full shrink-0 overflow-hidden sm:h-[180px]">
                   {item.image ? (
                     <Image
                       src={item.image}
                       alt={item.name}
                       fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
                     <div className="h-full w-full" style={{ backgroundColor: accentColor, opacity: 0.2 }} />
                   )}
-                  <div className="from-card via-card/20 absolute inset-0 bg-gradient-to-t to-transparent" />
+                  <div className="from-card via-card/20 pointer-events-none absolute inset-0 z-[1] size-full bg-gradient-to-t to-transparent" />
                   <div
-                    className="bg-background/90 absolute top-6 left-6 rounded-full border-l-4 px-4 py-1.5 text-xs font-black tracking-widest uppercase shadow-lg backdrop-blur"
+                    className="bg-background/90 absolute top-3 left-3 z-[2] max-w-[85%] rounded-full border-l-[3px] px-2.5 py-1 text-[10px] font-black tracking-widest uppercase shadow-md backdrop-blur sm:top-3.5 sm:left-3.5 sm:px-3 sm:text-[11px]"
                     style={{ borderLeftColor: accentColor }}
                   >
-                    {item.name}
+                    <span className="line-clamp-1">{item.name}</span>
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-6 md:p-8">
-                  <h3 className="text-foreground mb-3 text-xl font-black tracking-tight uppercase italic sm:mb-4 sm:text-2xl">
+                <div className="space-y-3 p-3 sm:p-4">
+                  <h3 className="text-foreground line-clamp-2 text-base font-black tracking-tight uppercase italic sm:text-lg">
                     {item.name}
                   </h3>
-                  <p className="text-muted-foreground mb-4 text-sm leading-relaxed sm:mb-6 sm:text-base">
+                  <p className="text-muted-foreground line-clamp-2 text-xs leading-snug sm:text-sm">
                     {item.description ??
                       `Structured training designed for all levels. ${item.duration}-minute sessions, max ${item.capacity} participants.`}
                   </p>
 
-                  <div className="mb-6 grid grid-cols-3 gap-2 sm:mb-8 sm:gap-4">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                     {features.map((feat) => (
                       <div
                         key={feat.label}
-                        className="border-border bg-accent/50 rounded-lg border p-2 text-center sm:rounded-xl sm:p-3"
+                        className="border-border bg-accent/50 rounded-md border px-1 py-1.5 text-center sm:px-1.5 sm:py-2"
                       >
-                        <div className="text-muted-foreground mb-0.5 text-[9px] font-black tracking-tighter uppercase sm:mb-1 sm:text-[10px]">
+                        <div className="text-muted-foreground mb-0.5 text-[8px] font-black tracking-tighter uppercase sm:text-[9px]">
                           {feat.label}
                         </div>
-                        <div className="text-foreground truncate text-[10px] font-bold uppercase sm:text-[11px]">
+                        <div className="text-foreground truncate text-[9px] font-bold uppercase sm:text-[10px]">
                           {feat.value}
                         </div>
                       </div>
@@ -115,11 +115,12 @@ export function ClassesSection({ classes }: ClassesSectionProps) {
                   </div>
 
                   <Button
-                    className="hover:bg-primary hover:text-primary-foreground w-full rounded-xl py-4 text-sm font-black tracking-widest uppercase transition-colors"
+                    className="hover:bg-primary hover:text-primary-foreground h-9 w-full rounded-lg text-[10px] font-black tracking-widest uppercase sm:h-10 sm:text-xs"
                     variant="secondary"
+                    size="sm"
                     asChild
                   >
-                    <Link href={`/shop/classes/${item.id}`} className="cursor-pointer">
+                    <Link href={`/public/classes/${item.id}`} className="cursor-pointer">
                       View Class Info
                     </Link>
                   </Button>

@@ -99,7 +99,7 @@ export function SessionDetailsDialog({ session, open, onOpenChange, onJoinSessio
             <Button onClick={handleJoinClick}>Join Session</Button>
           ) : (
             <Button asChild>
-              <a href="/shop">View Memberships</a>
+              <a href="/public">View Memberships</a>
             </Button>
           )}
         </DialogFooter>

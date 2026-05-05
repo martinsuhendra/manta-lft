@@ -27,7 +27,7 @@ export default async function ShopPage() {
       <LandingHero />
       <AboutSection />
       <ClassesSection classes={classes} />
-      <UpcomingSessions sessions={sessions} />
+      <UpcomingSessions sessions={sessions} programNames={classes.map((c) => c.name)} />
       <FacilitiesSection />
       <InstructorsSection instructors={instructors} />
       <MembershipPlans products={products} />

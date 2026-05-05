@@ -6,7 +6,7 @@ Canonical role constants live in [`src/lib/rbac.ts`](../src/lib/rbac.ts). Naviga
 
 ## Post–sign-in redirect
 
-Roles in `RBAC_DEFAULT_DASHBOARD_REDIRECT_ROLES` (ADMIN, SUPERADMIN, DEVELOPER, TEACHER) are sent to `/dashboard/home` after login/register; others go to `/shop`. Implemented in [`src/middleware.ts`](../src/middleware.ts) and auth forms.
+Roles in `RBAC_DEFAULT_DASHBOARD_REDIRECT_ROLES` (ADMIN, SUPERADMIN, DEVELOPER, TEACHER) are sent to `/dashboard/home` after login/register; others go to `/public`. Implemented in [`src/middleware.ts`](../src/middleware.ts) and auth forms.
 
 ## Menu visibility (sidebar / search)
 

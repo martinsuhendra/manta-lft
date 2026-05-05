@@ -32,7 +32,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   }
 
   if (session.user.role === USER_ROLES.MEMBER) {
-    redirect("/shop");
+    redirect("/public");
   }
 
   const cookieStore = await cookies();

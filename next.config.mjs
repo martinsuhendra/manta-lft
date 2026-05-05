@@ -21,8 +21,18 @@ const nextConfig = {
     return [
       {
         source: "/dashboard",
-        destination: "/shop",
+        destination: "/public",
         permanent: false,
+      },
+      {
+        source: "/shop",
+        destination: "/public",
+        permanent: true,
+      },
+      {
+        source: "/shop/:path*",
+        destination: "/public/:path*",
+        permanent: true,
       },
     ];
   },

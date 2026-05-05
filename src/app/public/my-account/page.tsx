@@ -20,7 +20,7 @@ async function getAccountData() {
     const session = await auth();
 
     if (!session?.user.id) {
-      redirect("/shop");
+      redirect("/public");
     }
 
     const today = new Date();
@@ -28,7 +28,7 @@ async function getAccountData() {
 
     const activeBrandId = await resolveActiveBrandIdFromCookie();
     if (!activeBrandId) {
-      redirect("/shop");
+      redirect("/public");
     }
 
     // Get user with memberships, transactions, and upcoming bookings
@@ -139,7 +139,7 @@ async function getAccountData() {
     })) as any;
 
     if (!user) {
-      redirect("/shop");
+      redirect("/public");
     }
 
     // Format the response
@@ -305,7 +305,7 @@ async function getAccountData() {
     };
   } catch (error) {
     console.error("Failed to fetch account data:", error);
-    redirect("/shop");
+    redirect("/public");
   }
 }
 

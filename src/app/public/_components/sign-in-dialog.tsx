@@ -74,7 +74,7 @@ export function SignInDialog({
         toast.success("Successfully signed in!");
         setIsOpen(false);
         form.reset();
-        router.push("/shop/my-account");
+        router.push("/public/my-account");
         router.refresh();
       }
     } catch {

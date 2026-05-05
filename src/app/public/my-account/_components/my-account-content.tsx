@@ -357,7 +357,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
   }).length;
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/shop" });
+    signOut({ callbackUrl: "/public" });
   };
 
   const handleEdit = () => {
@@ -373,7 +373,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
   const onSubmit = async (data: EditProfileFormValues) => {
     setIsUpdating(true);
     try {
-      const response = await fetch("/api/shop/my-account", {
+      const response = await fetch("/api/public/my-account", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -531,7 +531,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                               per {membership.product.validDays} days
                             </p>
                             <Button size="sm" variant="outline" className="mt-4 w-full md:w-auto" asChild>
-                              <Link href="/shop">Manage Billing</Link>
+                              <Link href="/public">Manage Billing</Link>
                             </Button>
                           </div>
                         </div>
@@ -554,7 +554,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                     <div className="py-4">
                       <p className="text-muted-foreground mb-4">You don&apos;t have an active membership.</p>
                       <Button asChild>
-                        <Link href="/shop">Browse Plans</Link>
+                        <Link href="/public">Browse Plans</Link>
                       </Button>
                     </div>
                   )}

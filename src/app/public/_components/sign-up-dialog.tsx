@@ -137,7 +137,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
         });
         setIsOpen(false);
         form.reset();
-        router.push("/shop");
+        router.push("/public");
         router.refresh();
       }
     } catch {

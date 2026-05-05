@@ -37,11 +37,11 @@ export function ScheduleFilters({ items }: ScheduleFiltersProps) {
     if (updates.start !== undefined) params.set("start", updates.start);
     if (updates.end !== undefined) params.set("end", updates.end);
     if (updates.item !== undefined) params.set("item", updates.item);
-    router.push(`/shop/schedule?${params.toString()}`);
+    router.push(`/public/schedule?${params.toString()}`);
   };
 
   const resetFilters = () => {
-    router.push("/shop/schedule");
+    router.push("/public/schedule");
   };
 
   const hasActiveFilters = start !== defaultStart || end !== defaultEnd || itemId !== "all";

@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   if (isLoggedIn && isAuthPage) {
-    const redirectPath = shouldRedirectToDashboardAfterAuth(String(token.role)) ? "/dashboard/home" : "/shop";
+    const redirectPath = shouldRedirectToDashboardAfterAuth(String(token.role)) ? "/dashboard/home" : "/public";
     return NextResponse.redirect(new URL(redirectPath, nextUrl));
   }
 
@@ -31,13 +31,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
   }
 
-  // Members use /shop only — block direct navigation or stale sessions hitting /dashboard
+  // Members use /public only — block direct navigation or stale sessions hitting /dashboard
   if (isLoggedIn && isProtectedRoute && token.role === USER_ROLES.MEMBER) {
-    return NextResponse.redirect(new URL("/shop", nextUrl));
+    return NextResponse.redirect(new URL("/public", nextUrl));
   }
 
   const response = NextResponse.next();
-  // Expose pathname so root layout can force dark theme for shop (customer) pages
+  // Expose pathname so root layout can force dark theme for customer (public marketing) pages
   response.headers.set("x-pathname", nextUrl.pathname);
 
   // On dashboard, ensure active_brand_id cookie is set (default from JWT if missing)

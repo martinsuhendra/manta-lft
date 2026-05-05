@@ -24,6 +24,11 @@ interface UpcomingSessionsProps {
   showViewFullSchedule?: boolean;
   /** When true (e.g. landing page), show only today's sessions. When false (e.g. schedule page), show all sessions from filters. */
   todayOnly?: boolean;
+  /**
+   * All public programs (catalog). When omitted, chips are derived only from visible sessions —
+   * so programs with no sessions today disappear on the homepage.
+   */
+  programNames?: readonly string[];
 }
 
 export function UpcomingSessions({
@@ -31,6 +36,7 @@ export function UpcomingSessions({
   hideTitle,
   showViewFullSchedule = true,
   todayOnly = true,
+  programNames,
 }: UpcomingSessionsProps) {
   const { data: authSession } = useSession();
   const [filter, setFilter] = React.useState<string>("All");
@@ -69,10 +75,12 @@ export function UpcomingSessions({
     setShowBooking(true);
   };
 
-  const classTypes = React.useMemo(() => {
-    const names = new Set(sessionsToShow.map((s) => s.item.name));
-    return Array.from(names).sort();
-  }, [sessionsToShow]);
+  const filterChips = React.useMemo(() => {
+    const fromCatalog = programNames?.filter(Boolean).length ? Array.from(new Set(programNames.filter(Boolean))) : [];
+    const fromSessions = sessionsToShow.map((s) => s.item.name);
+    const names = new Set(fromCatalog.length > 0 ? fromCatalog : fromSessions);
+    return ["All", ...Array.from(names).sort((a, b) => a.localeCompare(b))];
+  }, [sessionsToShow, programNames]);
 
   const filteredSessions = React.useMemo(() => {
     if (filter === "All") return sessionsToShow;
@@ -122,7 +130,7 @@ export function UpcomingSessions({
         )}
 
         <div className="mb-10 flex flex-wrap justify-center gap-2">
-          {["All", ...classTypes].map((name) => (
+          {filterChips.map((name) => (
             <button
               key={name}
               type="button"
@@ -177,7 +185,7 @@ export function UpcomingSessions({
         {!hideTitle && showViewFullSchedule && (
           <div className="mt-12 flex justify-center">
             <Button asChild size="lg" className="gap-2 font-bold tracking-wide uppercase">
-              <Link href="/shop/schedule">
+              <Link href="/public/schedule">
                 View Full Schedule
                 <ArrowRight className="h-4 w-4" />
               </Link>

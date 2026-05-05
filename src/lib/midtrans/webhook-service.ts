@@ -132,7 +132,7 @@ export async function sendPaymentSuccessEmail(transaction: TransactionWithRelati
     const emailTemplate = createPaymentSuccessTemplate({
       userName: transaction.user.name || undefined,
       productName: transaction.product.name,
-      accountUrl: `${process.env.NEXT_PUBLIC_APP_URL}/shop/my-account`,
+      accountUrl: `${process.env.NEXT_PUBLIC_APP_URL}/public/my-account`,
     });
 
     await emailService.sendEmail(transaction.user.email, emailTemplate);
