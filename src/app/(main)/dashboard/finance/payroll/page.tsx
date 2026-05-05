@@ -38,6 +38,8 @@ export default function PayrollPage() {
 
   const params = useMemo(() => getSummaryQueryParams(filters), [filters]);
 
+  const lockedTeacherId = isTeacher && userId ? userId : undefined;
+
   const { data, isLoading } = useQuery({
     queryKey: ["payroll-summary", params],
     queryFn: async () => {
@@ -79,6 +81,7 @@ export default function PayrollPage() {
           onFiltersChange={setFilters}
           hideTeacherFilter={isTeacher}
           hideItemFilter={isTeacher}
+          lockedTeacherId={lockedTeacherId}
         />
       </div>
 
