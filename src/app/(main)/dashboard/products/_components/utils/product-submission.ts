@@ -9,6 +9,7 @@ interface SubmissionParams {
   product?: Product | null;
   productItems: CreateProductItemForm[];
   quotaPools: QuotaPool[];
+  onConfigSaved?: (productId: string) => Promise<void> | void;
   createProduct: {
     mutateAsync: (data: FormData) => Promise<Product>;
   };
@@ -26,6 +27,7 @@ export async function handleProductSubmission({
   product,
   productItems,
   quotaPools,
+  onConfigSaved,
   createProduct,
   updateProduct,
   onOpenChange,
@@ -35,6 +37,12 @@ export async function handleProductSubmission({
   try {
     if (isEdit && product) {
       const updated = await updateProduct.mutateAsync({ id: product.id, data });
+      await syncEditProductItemsAndQuotaPools({
+        productId: product.id,
+        productItems,
+        quotaPools,
+      });
+      await onConfigSaved?.(product.id);
       toast.success("Product updated successfully");
       if (!showSuccessStep) {
         onOpenChange(false);
@@ -44,6 +52,7 @@ export async function handleProductSubmission({
 
     const createdProduct = await createProduct.mutateAsync(data);
     await createQuotaPoolsAndItems(createdProduct, quotaPools, productItems);
+    await onConfigSaved?.(createdProduct.id);
     toast.success("Product created successfully");
 
     if (!showSuccessStep) {
@@ -61,6 +70,36 @@ export async function handleProductSubmission({
     const errorMessage = error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "create"} product`;
     toast.error(errorMessage);
     throw error;
+  }
+}
+
+async function syncEditProductItemsAndQuotaPools({
+  productId,
+  productItems,
+  quotaPools,
+}: {
+  productId: string;
+  productItems: CreateProductItemForm[];
+  quotaPools: QuotaPool[];
+}) {
+  const response = await fetch(`/api/admin/products/${productId}/sync-config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      quotaPools: quotaPools.map((pool) => ({
+        id: pool.id,
+        name: pool.name,
+        description: pool.description || undefined,
+        totalQuota: pool.totalQuota,
+        isActive: pool.isActive,
+      })),
+      productItems,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to sync product configuration: ${response.status} ${errorText}`);
   }
 }
 

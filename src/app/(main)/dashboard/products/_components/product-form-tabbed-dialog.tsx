@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ export function ProductFormTabbedDialog({
   onOpenChange: controlledOnOpenChange,
   trigger,
 }: ProductFormTabbedDialogProps) {
+  const queryClient = useQueryClient();
   const { open, onOpenChange } = useDialogState({ open: controlledOpen, onOpenChange: controlledOnOpenChange });
   const { isEdit, mutation, createProduct, updateProduct } = useProductMutation(mode);
 
@@ -104,6 +106,14 @@ export function ProductFormTabbedDialog({
         product,
         productItems,
         quotaPools,
+        onConfigSaved: async (savedProductId: string) => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["products"] }),
+            queryClient.invalidateQueries({ queryKey: ["product-items", savedProductId] }),
+            queryClient.invalidateQueries({ queryKey: ["product-items-with-usage", savedProductId] }),
+            queryClient.invalidateQueries({ queryKey: ["quota-pools", savedProductId] }),
+          ]);
+        },
         createProduct,
         updateProduct,
         onOpenChange,
