@@ -280,8 +280,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
                 <DialogHeader>
                   <DialogTitle>Purchase {product.name}</DialogTitle>
                   <DialogDescription>
-                    Enter your information to complete your membership purchase. You&apos;ll be redirected to complete
-                    payment.
+                    Enter your information to complete your membership purchase and continue with payment.
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>

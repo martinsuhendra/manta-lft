@@ -9,21 +9,41 @@ import { prisma } from "@/lib/generated/prisma";
 import { sumParticipantSlots } from "@/lib/session-utils";
 import { USER_ROLES } from "@/lib/types";
 
+interface ResolvedBrandWhereResult {
+  whereBrand: Prisma.ClassSessionWhereInput;
+  errorResponse: NextResponse | null;
+}
+
+async function resolvePublicSessionsBrandWhere(
+  request: NextRequest,
+  session: Awaited<ReturnType<typeof getServerSession>>,
+): Promise<ResolvedBrandWhereResult> {
+  if (session?.user?.role === USER_ROLES.MEMBER) {
+    const { error, brandIds } = await requireBrandAccess(request);
+    if (error) return { whereBrand: {}, errorResponse: error };
+    return { whereBrand: getBrandFilterFromRequest(request, brandIds), errorResponse: null };
+  }
+
+  const headerBrandId = request.headers.get("x-brand-id");
+  const cookieBrandId = request.cookies.get("active_brand_id")?.value;
+  const requestedBrandId = headerBrandId && headerBrandId !== "ALL" ? headerBrandId : cookieBrandId;
+
+  if (!requestedBrandId) return { whereBrand: {}, errorResponse: null };
+
+  const brand = await prisma.brand.findFirst({
+    where: { id: requestedBrandId, isActive: true },
+    select: { id: true },
+  });
+
+  if (!brand) return { whereBrand: {}, errorResponse: null };
+  return { whereBrand: { brandId: brand.id }, errorResponse: null };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.role !== USER_ROLES.MEMBER) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { error, brandIds } = await requireBrandAccess(request);
-    if (error) return error;
-    const whereBrand = getBrandFilterFromRequest(request, brandIds);
+    const { whereBrand, errorResponse } = await resolvePublicSessionsBrandWhere(request, session);
+    if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");

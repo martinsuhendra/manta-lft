@@ -45,7 +45,7 @@ export function LandingHero() {
             </p>
             <div className="animate-fade-in-up flex flex-col items-center justify-center gap-4 delay-200 sm:flex-row lg:justify-start">
               <Button asChild size="lg" className="h-12 w-full text-base font-bold tracking-wide uppercase sm:w-auto">
-                <Link href="#schedule">View Schedule</Link>
+                <Link href="/public/book">Book a Class</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-12 w-full text-base sm:w-auto">
                 <Link href="#plans">Start Free Trial</Link>

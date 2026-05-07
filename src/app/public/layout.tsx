@@ -1,6 +1,7 @@
 import React from "react";
 
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { Clock, Facebook, Instagram, MapPin, Twitter } from "lucide-react";
 
@@ -11,6 +12,24 @@ import { USER_ROLES } from "@/lib/types";
 
 import { ShopBrandProviderWrapper } from "./_components/shop-brand-provider-wrapper";
 import { ShopHeaderWrapper } from "./_components/shop-header-wrapper";
+
+const footerExploreLinks = [
+  { label: "Home", href: "/public" },
+  { label: "Classes", href: "/public#classes" },
+  { label: "Membership Plans", href: "/public#plans" },
+  { label: "Upcoming Sessions", href: "/public#schedule" },
+];
+
+const footerTrainingLinks = [
+  { label: "Book a Class", href: "/public/book" },
+  { label: "Class Details", href: "/public#classes" },
+  { label: "Community & Testimonials", href: "/public#plans" },
+];
+
+const footerSupportLinks = [
+  { label: "Privacy", href: "#" },
+  { label: "Terms", href: "#" },
+];
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -51,20 +70,21 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <div className="bg-background flex min-h-screen flex-col">
         <ShopHeaderWrapper session={session} />
         <main className="flex min-h-0 flex-1 flex-col pt-20">{children}</main>
-        <footer className="border-border bg-card border-t pt-10 pb-6 sm:pt-16 sm:pb-8">
+        <footer className="border-border bg-card border-t pt-10 pb-6 sm:pt-14 sm:pb-8">
           <div className="container mx-auto px-4">
-            <div className="mb-8 grid grid-cols-1 gap-8 sm:mb-12 sm:gap-12 md:grid-cols-4">
-              <div className="md:col-span-2">
-                <div className="mb-6 flex items-center gap-2">
+            <div className="mb-8 grid grid-cols-1 gap-8 sm:mb-10 lg:grid-cols-5 lg:gap-10">
+              <div className="lg:col-span-2">
+                <div className="mb-4 flex items-center gap-2">
                   <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded font-bold">
                     {APP_CONFIG.name.charAt(0)}
                   </div>
                   <span className="text-foreground text-xl font-black tracking-tight">{APP_CONFIG.name}</span>
                 </div>
-                <p className="text-muted-foreground mb-6 max-w-xs text-sm">
-                  Pushing the boundaries of human performance through functional fitness and high-intensity training.
+                <p className="text-muted-foreground mb-5 max-w-md text-sm">
+                  Performance-first fitness community with guided classes, structured progression, and a booking flow
+                  that keeps your training consistent.
                 </p>
-                <div className="flex gap-4">
+                <div className="mb-6 flex gap-4">
                   <a
                     href="#"
                     className="text-muted-foreground hover:text-primary flex h-10 w-10 items-center justify-center rounded-full transition-colors"
@@ -87,41 +107,74 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                     <Twitter className="h-5 w-5" />
                   </a>
                 </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Link
+                    href="/public/book"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-semibold transition-colors"
+                  >
+                    Book Your Class
+                  </Link>
+                  <Link
+                    href="/public#plans"
+                    className="border-border hover:bg-muted text-foreground inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors"
+                  >
+                    View Memberships
+                  </Link>
+                </div>
               </div>
               <div>
-                <h4 className="text-foreground mb-6 font-bold tracking-widest uppercase">Programs</h4>
-                <ul className="text-muted-foreground space-y-3 text-sm">
-                  <li>
-                    <a href="#classes" className="hover:text-primary transition-colors">
-                      Our Classes
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/public/schedule" className="hover:text-primary transition-colors">
-                      Schedule
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#plans" className="hover:text-primary transition-colors">
-                      Memberships
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/public/book" className="hover:text-primary transition-colors">
-                      Book a Class
-                    </a>
-                  </li>
+                <h4 className="text-foreground mb-4 text-sm font-bold tracking-widest uppercase">Explore</h4>
+                <ul className="text-muted-foreground space-y-2.5 text-sm">
+                  {footerExploreLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className="hover:text-primary transition-colors">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
               <div>
-                <h4 className="text-foreground mb-6 font-bold tracking-widest uppercase">Contact</h4>
-                <ul className="text-muted-foreground space-y-3 text-sm">
+                <h4 className="text-foreground mb-4 text-sm font-bold tracking-widest uppercase">Training</h4>
+                <ul className="text-muted-foreground space-y-2.5 text-sm">
+                  {footerTrainingLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className="hover:text-primary transition-colors">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-foreground mb-4 text-sm font-bold tracking-widest uppercase">Account & Support</h4>
+                <ul className="text-muted-foreground space-y-2.5 text-sm">
+                  <li>
+                    <Link
+                      href={session ? "/public/my-account" : "/sign-in"}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {session ? "My Account" : "Sign In"}
+                    </Link>
+                  </li>
+                  {footerSupportLinks.map((link) => (
+                    <li key={link.label}>
+                      <a href={link.href} className="hover:text-primary transition-colors">
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-foreground mb-4 text-sm font-bold tracking-widest uppercase">Visit Us</h4>
+                <ul className="text-muted-foreground space-y-2.5 text-sm">
                   <li className="flex items-start gap-3">
-                    <MapPin className="text-primary mt-0.5 h-5 w-5 shrink-0" />
-                    <span>Visit us at the box</span>
+                    <MapPin className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                    <span>CrossFit box location available at reception</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <Clock className="text-primary h-5 w-5 shrink-0" />
+                    <Clock className="text-primary h-4 w-4 shrink-0" />
                     <span>
                       Mon–Fri: 5am – 9pm
                       <br />
@@ -131,15 +184,10 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                 </ul>
               </div>
             </div>
-            <div className="border-border text-muted-foreground flex flex-col items-center justify-between gap-4 border-t pt-8 text-xs md:flex-row">
+            <div className="border-border text-muted-foreground flex flex-col items-center justify-between gap-4 border-t pt-6 text-xs md:flex-row">
               <p>{APP_CONFIG.copyright}</p>
-              <div className="flex gap-6">
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Privacy
-                </a>
-                <a href="#" className="hover:text-foreground transition-colors">
-                  Terms
-                </a>
+              <div className="flex gap-6 text-[11px] tracking-wide uppercase">
+                <span>Built for members and coaches</span>
               </div>
             </div>
           </div>

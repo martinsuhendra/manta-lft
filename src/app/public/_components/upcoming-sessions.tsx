@@ -185,8 +185,8 @@ export function UpcomingSessions({
         {!hideTitle && showViewFullSchedule && (
           <div className="mt-12 flex justify-center">
             <Button asChild size="lg" className="gap-2 font-bold tracking-wide uppercase">
-              <Link href="/public/schedule">
-                View Full Schedule
+              <Link href="/public/book">
+                Go to Booking
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

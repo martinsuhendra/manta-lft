@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { addDays, eachDayOfInterval, format, parseISO, startOfDay } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -19,9 +20,9 @@ import {
 } from "@/hooks/use-member-sessions";
 import { cn } from "@/lib/utils";
 
-import { SessionCard } from "../../_components/session-card";
+import { SignInDialog } from "../../_components/sign-in-dialog";
 
-import { BookDateStrip } from "./book-date-strip";
+import { BookSessionsPanel } from "./book-sessions-panel";
 import { BookingModal } from "./booking-modal";
 
 const defaultStart = startOfDay(new Date());
@@ -34,15 +35,12 @@ interface ClassOption {
 
 interface BookPageContentProps {
   classes: ClassOption[];
+  initialItemId?: string;
 }
 
-function getSessionsOnDate(byDate: Record<string, MemberSession[]>, dateKey: string): MemberSession[] {
-  if (!Object.prototype.hasOwnProperty.call(byDate, dateKey)) return [];
-  // eslint-disable-next-line security/detect-object-injection -- dateKey validated via hasOwnProperty
-  return byDate[dateKey];
-}
-
-interface BookSessionsPanelProps {
+interface SessionsResultProps {
+  isLoading: boolean;
+  hasSessions: boolean;
   daysInRange: string[];
   dateRangeKey: string;
   selectedDate: string | null;
@@ -51,9 +49,18 @@ interface BookSessionsPanelProps {
   sessionsForSelected: MemberSession[];
   bySessionId: Record<string, SessionEligibility | undefined>;
   onSelectSession: (session: MemberSession) => void;
+  isSignedIn: boolean;
 }
 
-function BookSessionsPanel({
+function getSessionsOnDate(byDate: Record<string, MemberSession[]>, dateKey: string): MemberSession[] {
+  if (!Object.prototype.hasOwnProperty.call(byDate, dateKey)) return [];
+  // eslint-disable-next-line security/detect-object-injection -- dateKey validated via hasOwnProperty
+  return byDate[dateKey];
+}
+
+function SessionsResult({
+  isLoading,
+  hasSessions,
   daysInRange,
   dateRangeKey,
   selectedDate,
@@ -62,70 +69,69 @@ function BookSessionsPanel({
   sessionsForSelected,
   bySessionId,
   onSelectSession,
-}: BookSessionsPanelProps) {
-  return (
-    <div className="space-y-6">
-      <BookDateStrip
-        allDays={daysInRange}
-        rangeKey={dateRangeKey}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        datesWithSessions={datesWithSessions}
-      />
-
-      {selectedDate ? (
-        <>
-          <div className="overflow-hidden border-b pb-4">
-            <div
-              key={selectedDate}
-              className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300 motion-reduce:animate-none"
-            >
-              <p className="text-muted-foreground text-sm font-medium sm:text-base">
-                {format(parseISO(selectedDate), "EEEE")}
-              </p>
-              <h3 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
-                {format(parseISO(selectedDate), "MMMM d, yyyy")}
-              </h3>
-            </div>
+  isSignedIn,
+}: SessionsResultProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 gap-2 overflow-hidden py-1">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <Skeleton key={i} className="h-[4.25rem] min-w-[3.25rem] shrink-0 rounded-xl sm:min-w-[3.75rem]" />
+            ))}
           </div>
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-9 w-full max-w-xs" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    );
+  }
 
-          {sessionsForSelected.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No sessions on this day.</p>
-          ) : (
-            <div className="space-y-4">
-              {sessionsForSelected.map((session) => {
-                const elig = bySessionId[session.id];
-                const spotsLeft = elig?.spotsLeft ?? session.spotsLeft;
-                const isFull = spotsLeft <= 0;
-                const actionLabel = isFull && !elig?.alreadyBooked ? "Waitlist" : "Join";
+  if (!hasSessions) {
+    return (
+      <div className="text-muted-foreground rounded-lg border border-dashed p-8 text-center">
+        <p>No sessions in this date range.</p>
+        <p className="mt-1 text-sm">Try adjusting the date range above.</p>
+      </div>
+    );
+  }
 
-                return (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    eligibility={elig}
-                    onCardClick={() => onSelectSession(session)}
-                    actionLabel={actionLabel}
-                    onActionClick={() => onSelectSession(session)}
-                    actionDisabled={false}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </>
-      ) : null}
-    </div>
+  return (
+    <BookSessionsPanel
+      daysInRange={daysInRange}
+      dateRangeKey={dateRangeKey}
+      selectedDate={selectedDate}
+      onSelectDate={onSelectDate}
+      datesWithSessions={datesWithSessions}
+      sessionsForSelected={sessionsForSelected}
+      bySessionId={bySessionId}
+      onSelectSession={onSelectSession}
+      isSignedIn={isSignedIn}
+    />
   );
 }
 
-export function BookPageContent({ classes }: BookPageContentProps) {
+export function BookPageContent({ classes, initialItemId }: BookPageContentProps) {
   const [startDate, setStartDate] = useState(() => format(defaultStart, "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(() => format(defaultEnd, "yyyy-MM-dd"));
-  const [itemId, setItemId] = useState<string>("");
+  const [itemId, setItemId] = useState<string>(() => initialItemId ?? "");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<MemberSession | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const { data: authSession } = useSession();
+  const isSignedIn = Boolean(authSession?.user);
+
+  useEffect(() => {
+    setItemId(initialItemId ?? "");
+  }, [initialItemId]);
 
   const filters = useMemo(() => ({ startDate, endDate, itemId: itemId || undefined }), [startDate, endDate, itemId]);
   const { data: sessions = [], isLoading } = useMemberSessions(filters);
@@ -183,9 +189,13 @@ export function BookPageContent({ classes }: BookPageContentProps) {
   );
 
   const sessionIds = useMemo(() => sessionsForSelected.map((s) => s.id), [sessionsForSelected]);
-  const { bySessionId } = useSessionEligibilityBatch(sessionIds, sessionIds.length > 0);
+  const { bySessionId } = useSessionEligibilityBatch(sessionIds, sessionIds.length > 0 && isSignedIn);
 
   const handleSelectSession = (s: MemberSession) => {
+    if (!isSignedIn) {
+      setSignInOpen(true);
+      return;
+    }
     setSelectedSession(s);
     setModalOpen(true);
   };
@@ -200,6 +210,11 @@ export function BookPageContent({ classes }: BookPageContentProps) {
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
           Browse upcoming sessions and book based on your membership.
         </p>
+        {!isSignedIn ? (
+          <p className="text-muted-foreground mt-2 text-sm">
+            Sign in to book classes. You can still browse all sessions.
+          </p>
+        ) : null}
       </section>
 
       <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
@@ -254,6 +269,7 @@ export function BookPageContent({ classes }: BookPageContentProps) {
                 mode="single"
                 selected={endDateObj}
                 onSelect={(date) => date && setEndDate(format(date, "yyyy-MM-dd"))}
+                disabled={startDateObj ? { before: startDateObj } : undefined}
                 initialFocus
               />
             </PopoverContent>
@@ -279,44 +295,22 @@ export function BookPageContent({ classes }: BookPageContentProps) {
         </div>
       </section>
 
-      {isLoading ? (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-            <div className="flex min-w-0 flex-1 gap-2 overflow-hidden py-1">
-              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <Skeleton key={i} className="h-[4.25rem] min-w-[3.25rem] shrink-0 rounded-xl sm:min-w-[3.75rem]" />
-              ))}
-            </div>
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-9 w-full max-w-xs" />
-          </div>
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      ) : sortedSessionsFlat.length === 0 ? (
-        <div className="text-muted-foreground rounded-lg border border-dashed p-8 text-center">
-          <p>No sessions in this date range.</p>
-          <p className="mt-1 text-sm">Try adjusting the date range above.</p>
-        </div>
-      ) : (
-        <BookSessionsPanel
-          daysInRange={daysInRange}
-          dateRangeKey={`${rangeStart}|${rangeEnd}`}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          datesWithSessions={datesWithSessions}
-          sessionsForSelected={sessionsForSelected}
-          bySessionId={bySessionId}
-          onSelectSession={handleSelectSession}
-        />
-      )}
+      <SessionsResult
+        isLoading={isLoading}
+        hasSessions={sortedSessionsFlat.length > 0}
+        daysInRange={daysInRange}
+        dateRangeKey={`${rangeStart}|${rangeEnd}`}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        datesWithSessions={datesWithSessions}
+        sessionsForSelected={sessionsForSelected}
+        bySessionId={bySessionId}
+        onSelectSession={handleSelectSession}
+        isSignedIn={isSignedIn}
+      />
 
       <BookingModal session={selectedSession} open={modalOpen} onOpenChange={setModalOpen} />
+      <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   );
 }

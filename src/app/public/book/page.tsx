@@ -1,10 +1,7 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
 import { APP_CONFIG } from "@/config/app-config";
 import { resolveActiveBrandIdFromCookie } from "@/lib/brand-cookie";
-import { USER_ROLES } from "@/lib/types";
 
 import { SectionWithPattern } from "../_components/section-with-pattern";
 import { getClasses } from "../_lib/shop-queries";
@@ -16,22 +13,21 @@ export const metadata: Metadata = {
   description: "Browse and book classes based on your membership",
 };
 
-export default async function BookPage() {
-  const session = await auth();
+interface BookPageProps {
+  searchParams: Promise<{ item?: string }>;
+}
 
-  if (!session?.user.id) {
-    redirect("/public");
-  }
-
-  if (session.user.role !== USER_ROLES.MEMBER) {
-    redirect("/public");
-  }
-
+export default async function BookPage({ searchParams }: BookPageProps) {
+  const params = await searchParams;
+  const initialItemId = typeof params.item === "string" ? params.item : undefined;
   const activeBrandId = await resolveActiveBrandIdFromCookie();
   const classes = await getClasses(activeBrandId ?? undefined);
+
+  const hasInitialClass = initialItemId ? classes.some((item) => item.id === initialItemId) : false;
+
   return (
     <SectionWithPattern as="div" className="bg-muted/20 sporty-section-fill min-h-[60vh]">
-      <BookPageContent classes={classes} />
+      <BookPageContent classes={classes} initialItemId={hasInitialClass ? initialItemId : undefined} />
     </SectionWithPattern>
   );
 }
