@@ -19,6 +19,21 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en" data-theme-preset="manta" suppressHydrationWarning>
       <body className={`${outfit.className} min-h-screen antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                try {
+                  const savedTheme = window.localStorage.getItem("theme")
+                  if (savedTheme) return
+                  document.documentElement.classList.add("dark")
+                } catch {
+                  document.documentElement.classList.add("dark")
+                }
+              })()
+            `,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>

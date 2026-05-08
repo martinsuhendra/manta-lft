@@ -12,9 +12,9 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
       <div className="bg-brand-accent grid h-dvh justify-center p-2 lg:grid-cols-2">
         <div className="relative order-2 hidden h-full flex-col items-center justify-center overflow-hidden rounded-3xl bg-slate-50 lg:flex">
           {/* Subtle animated background elements */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="bg-brand-accent/10 absolute top-0 right-0 left-0 -z-10 m-auto h-[310px] w-[310px] rounded-full opacity-40 blur-[100px]"></div>
-          <div className="bg-brand-primary/15 absolute right-0 bottom-0 -z-10 h-[250px] w-[250px] rounded-full opacity-40 blur-[80px]"></div>
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="bg-brand-accent/10 pointer-events-none absolute top-0 right-0 left-0 -z-10 m-auto h-[310px] w-[310px] rounded-full opacity-40 blur-[100px]"></div>
+          <div className="bg-brand-primary/15 pointer-events-none absolute right-0 bottom-0 -z-10 h-[250px] w-[250px] rounded-full opacity-40 blur-[80px]"></div>
 
           <div className="z-10 flex flex-col items-center justify-center space-y-8 text-center">
             <div className="animate-bounce-slow relative flex items-center justify-center">
@@ -29,7 +29,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
             </div>
           </div>
 
-          <div className="absolute right-10 bottom-10">
+          <div className="absolute right-10 bottom-10 z-20">
             <div
               className="animate-fade-in-up w-[320px] space-y-3 rounded-xl border border-slate-200/60 bg-white/70 p-4 text-slate-800 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-md"
               style={{ animationDelay: "300ms", animationFillMode: "both" }}
