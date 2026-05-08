@@ -41,7 +41,7 @@ const NavItemExpanded = ({
   isSubmenuOpen,
 }: {
   item: NavMainItem;
-  isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
+  isActive: (url: string) => boolean;
   isSubmenuOpen: (subItems?: NavMainItem["subItems"]) => boolean;
 }) => {
   return (
@@ -49,11 +49,7 @@ const NavItemExpanded = ({
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           {item.subItems ? (
-            <SidebarMenuButton
-              disabled={item.comingSoon}
-              isActive={isActive(item.url, item.subItems)}
-              tooltip={item.title}
-            >
+            <SidebarMenuButton disabled={item.comingSoon} isActive={false} tooltip={item.title}>
               {item.icon && <item.icon />}
               <span>{item.title}</span>
               {item.comingSoon && <IsComingSoon />}
@@ -96,22 +92,12 @@ const NavItemExpanded = ({
   );
 };
 
-const NavItemCollapsed = ({
-  item,
-  isActive,
-}: {
-  item: NavMainItem;
-  isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
-}) => {
+const NavItemCollapsed = ({ item, isActive }: { item: NavMainItem; isActive: (url: string) => boolean }) => {
   return (
     <SidebarMenuItem key={item.title}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton
-            disabled={item.comingSoon}
-            tooltip={item.title}
-            isActive={isActive(item.url, item.subItems)}
-          >
+          <SidebarMenuButton disabled={item.comingSoon} tooltip={item.title} isActive={false}>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             <ChevronRight />
@@ -161,12 +147,7 @@ export function NavMain({ items }: NavMainProps) {
     }))
     .filter((group) => group.items.length > 0); // Remove empty groups
 
-  const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
-    if (subItems?.length) {
-      return subItems.some((sub) => path.startsWith(sub.url));
-    }
-    return path === url;
-  };
+  const isItemActive = (url: string) => path === url;
 
   const isSubmenuOpen = (subItems?: NavMainItem["subItems"]) => {
     return subItems?.some((sub) => path.startsWith(sub.url)) ?? false;

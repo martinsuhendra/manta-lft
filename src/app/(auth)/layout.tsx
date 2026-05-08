@@ -9,12 +9,12 @@ import { APP_CONFIG } from "@/config/app-config";
 export default function Layout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <main>
-      <div className="grid h-dvh justify-center p-2 lg:grid-cols-2">
+      <div className="bg-brand-accent grid h-dvh justify-center p-2 lg:grid-cols-2">
         <div className="relative order-2 hidden h-full flex-col items-center justify-center overflow-hidden rounded-3xl bg-slate-50 lg:flex">
           {/* Subtle animated background elements */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute top-0 right-0 left-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-indigo-500/10 opacity-40 blur-[100px]"></div>
-          <div className="absolute right-0 bottom-0 -z-10 h-[250px] w-[250px] rounded-full bg-orange-500/10 opacity-40 blur-[80px]"></div>
+          <div className="bg-brand-accent/10 absolute top-0 right-0 left-0 -z-10 m-auto h-[310px] w-[310px] rounded-full opacity-40 blur-[100px]"></div>
+          <div className="bg-brand-primary/15 absolute right-0 bottom-0 -z-10 h-[250px] w-[250px] rounded-full opacity-40 blur-[80px]"></div>
 
           <div className="z-10 flex flex-col items-center justify-center space-y-8 text-center">
             <div className="animate-bounce-slow relative flex items-center justify-center">
