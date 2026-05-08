@@ -5,8 +5,8 @@ import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
-// Format: { THEME_NAME: CSS_SELECTOR } — dark-only app
-const THEMES = { dark: ".dark" } as const
+// Per-theme selectors so ChartStyle vars apply in light and dark (next-themes toggles `html.dark`)
+const THEMES = { light: ":root", dark: ".dark" } as const
 
 export type ChartConfig = {
   [k in string]: {
