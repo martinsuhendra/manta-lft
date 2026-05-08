@@ -2,26 +2,26 @@
 
 **DEVELOPER** is treated like SUPERADMIN for most admin APIs and nav, except **Brands** (sidebar: DEVELOPER only).
 
-Canonical role constants live in [`src/lib/rbac.ts`](../src/lib/rbac.ts). Navigation visibility is driven by `requiredRoles` on items in [`src/navigation/sidebar/sidebar-items.ts`](../src/navigation/sidebar/sidebar-items.ts); the command palette applies the same rules in [`src/app/(main)/dashboard/_components/sidebar/search-dialog.tsx`](../src/app/(main)/dashboard/_components/sidebar/search-dialog.tsx).
+Canonical role constants live in [`src/lib/rbac.ts`](../src/lib/rbac.ts). Navigation visibility is driven by `requiredRoles` on items in [`src/navigation/sidebar/sidebar-items.ts`](../src/navigation/sidebar/sidebar-items.ts); the command palette applies the same rules in [`src/app/(main)/dashboard/_components/sidebar/search-dialog.tsx`](<../src/app/(main)/dashboard/_components/sidebar/search-dialog.tsx>).
 
 ## Post–sign-in redirect
 
-Roles in `RBAC_DEFAULT_DASHBOARD_REDIRECT_ROLES` (ADMIN, SUPERADMIN, DEVELOPER, TEACHER) are sent to `/dashboard/home` after login/register; others go to `/shop`. Implemented in [`src/middleware.ts`](../src/middleware.ts) and auth forms.
+Roles in `RBAC_DEFAULT_DASHBOARD_REDIRECT_ROLES` (ADMIN, SUPERADMIN, DEVELOPER, TEACHER) are sent to `/dashboard/home` after login/register; others go to `/public`. Implemented in [`src/middleware.ts`](../src/middleware.ts) and auth forms.
 
 ## Menu visibility (sidebar / search)
 
-| Area | SUPERADMIN | ADMIN | TEACHER |
-|------|------------|-------|---------|
-| Home, CRM | yes | yes | yes |
-| Users & Membership | yes | yes | no |
-| Classes (items) | yes | no | no |
-| Products | yes | no | no |
-| Sessions | yes | yes | yes (read-only UI + API scoped to assigned sessions) |
-| Finance → Overview | yes | yes | no |
-| Finance → Payroll | yes | yes | yes (read-only UI; summary cards hidden; API scoped to self) |
-| Finance → Transactions | yes | yes | no |
-| Brands | no (DEVELOPER only in nav) | no | no |
-| Settings (Booking, Waiver) | yes | yes | no |
+| Area                       | SUPERADMIN                 | ADMIN | TEACHER                                                      |
+| -------------------------- | -------------------------- | ----- | ------------------------------------------------------------ |
+| Home, CRM                  | yes                        | yes   | yes                                                          |
+| Users & Membership         | yes                        | yes   | no                                                           |
+| Classes (items)            | yes                        | no    | no                                                           |
+| Products                   | yes                        | no    | no                                                           |
+| Sessions                   | yes                        | yes   | yes (read-only UI + API scoped to assigned sessions)         |
+| Finance → Overview         | yes                        | yes   | no                                                           |
+| Finance → Payroll          | yes                        | yes   | yes (read-only UI; summary cards hidden; API scoped to self) |
+| Finance → Transactions     | yes                        | yes   | no                                                           |
+| Brands                     | no (DEVELOPER only in nav) | no    | no                                                           |
+| Settings (Booking, Waiver) | yes                        | yes   | no                                                           |
 
 ## Server enforcement highlights
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { auth } from "@/auth";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { USER_ROLES } from "@/lib/types";
@@ -32,7 +33,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
   }
 
   if (session.user.role === USER_ROLES.MEMBER) {
-    redirect("/shop");
+    redirect("/public");
   }
 
   const cookieStore = await cookies();
@@ -74,6 +75,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
                 <SearchDialog />
               </div>
               <div className="flex items-center gap-2">
+                <ModeToggle />
                 <AccountSwitcher users={[currentUser]} />
               </div>
             </div>

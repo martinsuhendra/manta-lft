@@ -20,9 +20,9 @@ export async function createSnapTransaction(params: SnapTransactionParams): Prom
   validateMidtransConfig();
 
   const finishCallbackUrl =
-    params.finishCallbackUrl === undefined
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/shop/my-account`
-      : params.finishCallbackUrl;
+    typeof params.finishCallbackUrl === "string" && params.finishCallbackUrl.trim().length > 0
+      ? params.finishCallbackUrl
+      : null;
 
   const payload: MidtransSnapRequest = {
     transaction_details: {

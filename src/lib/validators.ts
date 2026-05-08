@@ -8,6 +8,7 @@ function normalizePhoneNumber(value: string) {
 export const signInFormSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  remember: z.preprocess((value) => value === true || value === "true" || value === "on", z.boolean()).default(false),
 });
 
 const signUpFieldsBaseSchema = z.object({

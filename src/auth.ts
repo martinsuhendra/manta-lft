@@ -14,6 +14,9 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/generated/prisma";
 import { signInFormSchema } from "@/lib/validators";
 
+const THIRTY_DAYS_IN_SECONDS = 30 * 24 * 60 * 60;
+const ONE_DAY_IN_SECONDS = 24 * 60 * 60;
+
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -26,7 +29,7 @@ export const authOptions = {
       async authorize(raw) {
         if (!raw) return null;
 
-        const { email, password } = signInFormSchema.parse(raw);
+        const { email, password, remember } = signInFormSchema.parse(raw);
         const user = await prisma.user.findUnique({
           where: { email },
           select: {
@@ -51,11 +54,16 @@ export const authOptions = {
           role: user.role,
           emailVerified: user.emailVerified,
           phoneNo: user.phoneNo,
+          remember,
         };
       },
     }),
   ],
-  session: { strategy: "jwt" as const },
+  session: {
+    strategy: "jwt" as const,
+    maxAge: THIRTY_DAYS_IN_SECONDS,
+    updateAge: ONE_DAY_IN_SECONDS,
+  },
   pages: {
     signIn: "/sign-in",
     signOut: "/sign-in",
@@ -67,14 +75,21 @@ export const authOptions = {
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // If url is on the same origin, allow it
       else if (new URL(url).origin === baseUrl) return url;
-      // Otherwise redirect to shop (role-based redirect handled in login form)
-      return `${baseUrl}/shop`;
+      // Otherwise redirect to public site (role-based redirect handled in login form)
+      return `${baseUrl}/public`;
     },
     async jwt({ token, user, trigger }: { token: JWT; user?: User; trigger?: "update" | "signIn" | "signUp" }) {
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+
+      if (token.remember === false && token.sessionExpiresAt && nowInSeconds > token.sessionExpiresAt)
+        return { ...token, sub: undefined, exp: 0 };
+
       if (user) {
         token.role = user.role;
         token.emailVerified = user.emailVerified;
         token.phoneNo = user.phoneNo;
+        token.remember = user.remember ?? false;
+        token.sessionExpiresAt = nowInSeconds + (token.remember ? THIRTY_DAYS_IN_SECONDS : ONE_DAY_IN_SECONDS);
       }
 
       if (trigger === "update" || user) {
@@ -93,7 +108,9 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      session.user.id = token.sub as string;
+      if (!token.sub) return null as unknown as Session;
+
+      session.user.id = token.sub;
       session.user.role = token.role as string;
       session.user.emailVerified = token.emailVerified;
       session.user.phoneNo = token.phoneNo;

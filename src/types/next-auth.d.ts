@@ -7,6 +7,7 @@ declare module "next-auth" {
     role?: string;
     emailVerified?: Date | null;
     phoneNo?: string | null;
+    remember?: boolean;
   }
 
   interface Session {
@@ -42,6 +43,8 @@ declare module "next-auth/jwt" {
     emailVerified?: Date | null;
     phoneNo?: string | null;
     defaultBrandId?: string;
+    remember?: boolean;
+    sessionExpiresAt?: number;
   }
 }
 

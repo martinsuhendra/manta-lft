@@ -1,5 +1,11 @@
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+
+const projectDirectory = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: projectDirectory,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
@@ -21,8 +27,18 @@ const nextConfig = {
     return [
       {
         source: "/dashboard",
-        destination: "/shop",
+        destination: "/public",
         permanent: false,
+      },
+      {
+        source: "/shop",
+        destination: "/public",
+        permanent: true,
+      },
+      {
+        source: "/shop/:path*",
+        destination: "/public/:path*",
+        permanent: true,
       },
     ];
   },

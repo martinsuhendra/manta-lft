@@ -42,6 +42,7 @@ export function LoginForm() {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
+        remember: data.remember ? "true" : "false",
         redirect: false,
       });
 
@@ -55,7 +56,7 @@ export function LoginForm() {
         await new Promise((resolve) => setTimeout(resolve, 100));
         const session = await getSession();
         const role = session?.user.role;
-        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/shop";
+        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/public";
         router.push(redirectPath);
         router.refresh();
       }
@@ -116,7 +117,7 @@ export function LoginForm() {
                   className="size-4"
                 />
               </FormControl>
-              <FormLabel htmlFor="login-remember" className="text-muted-foreground ml-1 text-sm font-medium">
+              <FormLabel htmlFor="login-remember" className="ml-1 text-sm font-medium text-white/75">
                 Remember me for 30 days
               </FormLabel>
             </FormItem>
@@ -126,7 +127,10 @@ export function LoginForm() {
           {isLoading ? "Signing in..." : "Login"}
         </Button>
         <div className="text-center">
-          <Link href="/forgot-password" className="muted-foreground hover:text-primary text-sm">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-white/90 underline-offset-4 hover:text-white hover:underline"
+          >
             Forgot your password?
           </Link>
         </div>

@@ -1,5 +1,6 @@
 import { FlatCompat } from "@eslint/eslintrc";
 import pluginJs from "@eslint/js";
+import pluginNext from "@next/eslint-plugin-next";
 import pluginImport from "eslint-plugin-import";
 import pluginReact from "eslint-plugin-react";
 import globals from "globals";
@@ -44,6 +45,7 @@ export default [
       },
     },
     plugins: {
+      "@next/next": pluginNext,
       import: pluginImport,
       security: securityPlugin,
       prettier: prettier,

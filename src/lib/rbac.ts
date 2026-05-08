@@ -15,7 +15,7 @@ export const RBAC_SESSIONS_MENU_ROLES: readonly string[] = [...RBAC_ADMIN_ROLES,
 /** Payroll summary read access (includes teacher self-only). */
 export const RBAC_PAYROLL_MENU_ROLES: readonly string[] = [...RBAC_ADMIN_ROLES, USER_ROLES.TEACHER];
 
-/** After sign-in, send these roles to the dashboard by default (others → shop). */
+/** After sign-in, send these roles to the dashboard by default (others → /public). */
 export const RBAC_DEFAULT_DASHBOARD_REDIRECT_ROLES: readonly string[] = [...RBAC_ADMIN_ROLES, USER_ROLES.TEACHER];
 
 /** Private session admin API (create + eligibility) — admin operators only. */

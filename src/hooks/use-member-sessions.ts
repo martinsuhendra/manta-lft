@@ -86,7 +86,7 @@ export function useMemberSessions(filters?: MemberSessionFilters) {
   return useQuery<MemberSession[]>({
     queryKey: ["member-sessions", activeBrandId, filters],
     queryFn: async () => {
-      const { data } = await axios.get<MemberSession[]>("/api/shop/sessions", { params });
+      const { data } = await axios.get<MemberSession[]>("/api/public/sessions", { params });
       return data;
     },
     retry: false,
@@ -99,7 +99,7 @@ export function useSessionEligibility(sessionId: string | null, enabled: boolean
     queryKey: ["session-eligibility", activeBrandId, sessionId],
     queryFn: async () => {
       if (!sessionId) throw new Error("No session ID");
-      const { data } = await axios.get<SessionEligibility>(`/api/shop/sessions/${sessionId}/eligibility`);
+      const { data } = await axios.get<SessionEligibility>(`/api/public/sessions/${sessionId}/eligibility`);
       return data;
     },
     enabled: enabled && !!sessionId,
@@ -113,7 +113,7 @@ export function useSessionEligibilityBatch(sessionIds: string[], enabled: boolea
     queries: sessionIds.map((id) => ({
       queryKey: ["session-eligibility", activeBrandId, id] as const,
       queryFn: async () => {
-        const { data } = await axios.get<SessionEligibility>(`/api/shop/sessions/${id}/eligibility`);
+        const { data } = await axios.get<SessionEligibility>(`/api/public/sessions/${id}/eligibility`);
         return data;
       },
       enabled: enabled && !!id,
@@ -141,7 +141,7 @@ export function useMemberWaiver(enabled = true) {
   return useQuery<MemberWaiver>({
     queryKey: ["member-waiver", activeBrandId],
     queryFn: async () => {
-      const { data } = await axios.get<MemberWaiver>("/api/shop/waiver");
+      const { data } = await axios.get<MemberWaiver>("/api/public/waiver");
       return data;
     },
     enabled,
@@ -155,7 +155,7 @@ export function useAcceptMemberWaiver() {
 
   return useMutation({
     mutationFn: async (version: number) => {
-      const { data } = await axios.post("/api/shop/waiver/accept", { version });
+      const { data } = await axios.post("/api/public/waiver/accept", { version });
       return data;
     },
     onSuccess: () => {
@@ -179,7 +179,7 @@ export function useMemberBookSession() {
 
   return useMutation({
     mutationFn: async ({ sessionId, membershipId }: { sessionId: string; membershipId: string }) => {
-      const { data } = await axios.post(`/api/shop/sessions/${sessionId}/book`, { membershipId });
+      const { data } = await axios.post(`/api/public/sessions/${sessionId}/book`, { membershipId });
       return data;
     },
     onSuccess: (_, { sessionId }) => {
@@ -204,7 +204,7 @@ export function useMemberCancelBooking() {
 
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      await axios.delete(`/api/shop/bookings/${bookingId}`);
+      await axios.delete(`/api/public/bookings/${bookingId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["member-sessions", activeBrandId] });

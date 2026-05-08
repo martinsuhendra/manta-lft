@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -12,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { USER_ROLES } from "@/lib/types";
+import { useBrandStore } from "@/stores/brand/brand-provider";
 
 const formSchema = z.object({
   endBookingPeriodHours: z.coerce.number().int().min(0).max(720),
@@ -22,36 +25,49 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function BookingSettingsPage() {
   const queryClient = useQueryClient();
+  const activeBrandId = useBrandStore((s) => s.activeBrandId);
+  const selectedBrandId = activeBrandId && activeBrandId !== "ALL" ? activeBrandId : null;
 
   const { data: settings, isLoading: loadingSettings } = useQuery({
-    queryKey: ["admin-booking-settings"],
+    queryKey: ["admin-booking-settings", selectedBrandId],
     queryFn: async () => {
-      const res = await fetch("/api/admin/booking-settings");
+      if (!selectedBrandId) throw new Error("Select a single brand to view booking settings");
+      const res = await fetch("/api/admin/booking-settings", {
+        headers: {
+          "x-brand-id": selectedBrandId,
+        },
+      });
       if (!res.ok) throw new Error("Failed to load settings");
       return res.json() as Promise<{ endBookingPeriodHours: number; cancellationDeadlineHours: number }>;
     },
+    enabled: Boolean(selectedBrandId),
   });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values:
-      settings != null
-        ? {
-            endBookingPeriodHours: settings.endBookingPeriodHours,
-            cancellationDeadlineHours: settings.cancellationDeadlineHours,
-          }
-        : undefined,
     defaultValues: {
       endBookingPeriodHours: 0,
       cancellationDeadlineHours: 24,
     },
   });
 
+  useEffect(() => {
+    if (!settings) return;
+    form.reset({
+      endBookingPeriodHours: settings.endBookingPeriodHours,
+      cancellationDeadlineHours: settings.cancellationDeadlineHours,
+    });
+  }, [form, settings]);
+
   const updateMutation = useMutation({
     mutationFn: async (values: FormValues) => {
+      if (!selectedBrandId) throw new Error("Select a single brand to update booking settings");
       const res = await fetch("/api/admin/booking-settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-brand-id": selectedBrandId,
+        },
         body: JSON.stringify(values),
       });
       if (!res.ok) {
@@ -61,7 +77,7 @@ export default function BookingSettingsPage() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-booking-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-booking-settings", selectedBrandId] });
       toast.success("Booking settings saved");
     },
     onError: (err: Error) => {
@@ -85,7 +101,11 @@ export default function BookingSettingsPage() {
           </p>
         </div>
 
-        {loadingSettings ? (
+        {!selectedBrandId ? (
+          <div className="text-muted-foreground">
+            Select a single brand from the brand switcher to view and update booking settings.
+          </div>
+        ) : loadingSettings ? (
           <div className="text-muted-foreground flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading settings…

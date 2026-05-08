@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" data-theme-preset="manta" suppressHydrationWarning>
       <body className={`${outfit.className} min-h-screen antialiased`}>
         <Providers>{children}</Providers>
       </body>

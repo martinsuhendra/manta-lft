@@ -27,6 +27,12 @@ interface TransactionWithRelations {
   memberships: Array<{ id: string }>;
 }
 
+function getAccountUrl() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+  if (!appUrl) return "/public/my-account";
+  return `${appUrl.replace(/\/$/, "")}/public/my-account`;
+}
+
 /**
  * Verify webhook signature and transaction status
  */
@@ -132,7 +138,7 @@ export async function sendPaymentSuccessEmail(transaction: TransactionWithRelati
     const emailTemplate = createPaymentSuccessTemplate({
       userName: transaction.user.name || undefined,
       productName: transaction.product.name,
-      accountUrl: `${process.env.NEXT_PUBLIC_APP_URL}/shop/my-account`,
+      accountUrl: getAccountUrl(),
     });
 
     await emailService.sendEmail(transaction.user.email, emailTemplate);
