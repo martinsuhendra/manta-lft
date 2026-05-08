@@ -55,7 +55,9 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
             </div>
           </div>
         </div>
-        <div className="relative order-1 flex h-full">{children}</div>
+        <div className="[&_[data-slot=input]]:text-foreground [&_[data-slot=input]]:placeholder:text-muted-foreground relative order-1 flex h-full text-white [&_.text-muted-foreground]:text-white/75 [&_[data-slot=input]]:bg-white">
+          {children}
+        </div>
       </div>
     </main>
   );
