@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Item } from "../../admin/items/_components/schema";
 
-import { ItemCard } from "./item-card";
+import { AddItemModalSelectItemsStep } from "./add-item-modal-select-items-step";
 import { QuotaType, CreateQuotaPoolForm, QuotaPool } from "./schema";
 
 type ModalStep = "quota-type" | "create-pool" | "select-pool" | "select-item";
@@ -67,6 +67,7 @@ export function AddItemModal({
   const [selectedQuotaValue, setSelectedQuotaValue] = React.useState<string>("1");
   const [selectedQuotaPoolId, setSelectedQuotaPoolId] = React.useState<string>("");
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [pendingItemIds, setPendingItemIds] = React.useState<Set<string>>(() => new Set());
   const [newPool, setNewPool] = React.useState<CreateQuotaPoolForm>(DEFAULT_POOL_FORM);
 
   const filteredItems = availableItems.filter(
@@ -102,15 +103,29 @@ export function AddItemModal({
     }
   }, [quotaPools, step, selectedQuotaPoolId]);
 
-  const handleItemSelect = (item: Item) => {
-    if (!selectedQuotaType) return;
+  const handleAddPendingItems = () => {
+    if (!selectedQuotaType || pendingItemIds.size === 0) return;
 
     const quotaValue = selectedQuotaType === "INDIVIDUAL" ? parseInt(selectedQuotaValue) || 1 : undefined;
     const quotaPoolId = selectedQuotaType === "SHARED" ? selectedQuotaPoolId || undefined : undefined;
 
-    onItemAdd(item, selectedQuotaType, quotaValue, quotaPoolId);
-    handleClose();
+    const toAdd = availableItems.filter((i) => pendingItemIds.has(i.id));
+    for (const item of toAdd) onItemAdd(item, selectedQuotaType, quotaValue, quotaPoolId);
+    setPendingItemIds(new Set());
   };
+
+  function togglePendingItem(item: Item) {
+    setPendingItemIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+  }
+
+  React.useEffect(() => {
+    setPendingItemIds(new Set());
+  }, [step, selectedQuotaType]);
 
   const handleClose = () => {
     setStep("quota-type");
@@ -118,6 +133,7 @@ export function AddItemModal({
     setSelectedQuotaValue("1");
     setSelectedQuotaPoolId("");
     setSearchQuery("");
+    setPendingItemIds(new Set());
     setNewPool(DEFAULT_POOL_FORM);
     onOpenChange(false);
   };
@@ -146,10 +162,8 @@ export function AddItemModal({
       description: "Select which quota pool this item will use",
     },
     "select-item": {
-      title: "Select Item",
-      description: `Select an item to add with ${
-        selectedQuotaType === "INDIVIDUAL" ? "individual" : selectedQuotaType === "SHARED" ? "shared pool" : "free"
-      } quota`,
+      title: "Select Items",
+      description: `Select one or more items (${selectedQuotaType === "INDIVIDUAL" ? "individual" : selectedQuotaType === "SHARED" ? "shared pool" : "free"} quota). Add when ready — the dialog stays open.`,
     },
   };
 
@@ -157,7 +171,12 @@ export function AddItemModal({
   const currentStep = stepConfig[step];
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) handleClose();
+      }}
+    >
       <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -302,59 +321,19 @@ export function AddItemModal({
             </div>
           )}
 
-          {step === "select-item" && (
-            <div className="space-y-4">
-              {selectedQuotaType === "INDIVIDUAL" && (
-                <div>
-                  <Label htmlFor="quota-value">Quota Value</Label>
-                  <Input
-                    id="quota-value"
-                    type="number"
-                    min="1"
-                    value={selectedQuotaValue}
-                    onChange={(e) => setSelectedQuotaValue(e.target.value)}
-                    placeholder="Enter number of uses"
-                    className="mt-2"
-                  />
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Number of times this item can be used per membership
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="search-items">Search Items</Label>
-                <Input
-                  id="search-items"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="mt-2"
-                />
-              </div>
-
-              <div className="max-h-[400px] space-y-3 overflow-y-auto">
-                {filteredItems.length === 0 ? (
-                  <div className="text-muted-foreground py-8 text-center">
-                    <p className="font-medium">No items available</p>
-                    <p className="mt-2 text-sm">
-                      {searchQuery ? "Try a different search term" : "All items have been added"}
-                    </p>
-                  </div>
-                ) : (
-                  filteredItems.map((item) => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      onAdd={() => handleItemSelect(item)}
-                      variant="available"
-                      showActions={true}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          )}
+          {step === "select-item" && selectedQuotaType ? (
+            <AddItemModalSelectItemsStep
+              selectedQuotaType={selectedQuotaType}
+              selectedQuotaValue={selectedQuotaValue}
+              onSelectedQuotaValueChange={setSelectedQuotaValue}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              filteredItems={filteredItems}
+              pendingItemIds={pendingItemIds}
+              onTogglePendingItem={togglePendingItem}
+              onAddPendingItems={handleAddPendingItems}
+            />
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

@@ -69,8 +69,9 @@ export function ProductFormFields({
               <FormControl>
                 <div className="max-h-44 space-y-2 overflow-y-auto rounded-md border p-3">
                   {activeBrands.map((brand) => (
-                    <label key={brand.id} className="flex items-center gap-2 text-sm">
+                    <div key={brand.id} className="flex items-center gap-2 text-sm">
                       <Checkbox
+                        aria-label={`Select brand ${brand.name}`}
                         checked={field.value.includes(brand.id)}
                         disabled={mutation.isPending}
                         onCheckedChange={(checked) => {
@@ -82,7 +83,7 @@ export function ProductFormFields({
                         }}
                       />
                       <span>{brand.name}</span>
-                    </label>
+                    </div>
                   ))}
                   {!activeBrands.length && <p className="text-muted-foreground text-sm">No active brands available.</p>}
                 </div>
