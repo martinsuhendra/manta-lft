@@ -1,5 +1,3 @@
-import { Banknote, Clock } from "lucide-react";
-
 import { formatPrice } from "@/lib/utils";
 
 interface ProductCardStatsProps {
@@ -7,19 +5,21 @@ interface ProductCardStatsProps {
     price: number;
     validDays: number;
   };
+  compact?: boolean;
 }
 
-export function ProductCardStats({ data }: ProductCardStatsProps) {
+function validityLabel(validDays: number) {
+  const unit = validDays === 1 ? "day" : "days";
+  return `${validDays} ${unit} validity`;
+}
+
+export function ProductCardStats({ data, compact = false }: ProductCardStatsProps) {
+  const text = compact ? "text-xs" : "text-sm";
+
   return (
-    <div className="flex items-center justify-between text-sm">
-      <div className="flex items-center gap-2">
-        <Banknote className="text-muted-foreground h-4 w-4" />
-        <span className="font-semibold">{formatPrice(data.price)}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <Clock className="text-muted-foreground h-4 w-4" />
-        <span>{data.validDays} days</span>
-      </div>
+    <div className={`text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 ${text}`}>
+      <span className="text-foreground font-semibold tabular-nums">{formatPrice(data.price)}</span>
+      <span>{validityLabel(data.validDays)}</span>
     </div>
   );
 }
