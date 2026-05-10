@@ -19,10 +19,10 @@ export function ProductCardIncludes({ data, isPreview, isExpanded, setIsExpanded
   const content = <div className={contentClasses} dangerouslySetInnerHTML={{ __html: data.whatIsIncluded }} />;
 
   return (
-    <div className="mt-4 border-t pt-4">
+    <div className="mt-2 border-t border-dashed pt-2">
       {isPreview ? (
         <>
-          <h4 className="mb-2 text-sm font-medium">What&apos;s Included?</h4>
+          <h4 className="mb-1.5 text-xs font-medium">What&apos;s Included?</h4>
           {content}
         </>
       ) : (
@@ -30,7 +30,7 @@ export function ProductCardIncludes({ data, isPreview, isExpanded, setIsExpanded
           <Button
             variant="ghost"
             size="sm"
-            className="mb-2 h-auto justify-between p-0 text-sm font-medium hover:bg-transparent"
+            className="mb-1 h-auto justify-between p-0 text-xs font-medium hover:bg-transparent"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             What&apos;s Included?

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Clock, Users, X, Edit2 } from "lucide-react";
+import { Check, Clock, Users, X, Edit2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import { QuotaType } from "./schema";
 interface ItemCardProps {
   item: Item;
   isSelected?: boolean;
+  /** When true with variant "available", the card stays clickable while selected (toggle / multi-select). */
+  selectionToggle?: boolean;
   quotaType?: QuotaType;
   quotaValue?: number;
   quotaPoolName?: string;
@@ -87,6 +89,7 @@ function getQuotaInfo(quotaType?: QuotaType, quotaValue?: number, quotaPoolName?
 export function ItemCard({
   item,
   isSelected = false,
+  selectionToggle = false,
   quotaType,
   quotaValue,
   quotaPoolName,
@@ -97,7 +100,8 @@ export function ItemCard({
   variant = "available",
   disabled = false,
 }: ItemCardProps) {
-  const pressableToAdd = variant === "available" && !isSelected && Boolean(onAdd) && !disabled;
+  const pressableToAdd = variant === "available" && Boolean(onAdd) && !disabled && (!isSelected || selectionToggle);
+  const showSelectionCheckbox = selectionToggle && variant === "available";
 
   return (
     <Card
@@ -108,7 +112,11 @@ export function ItemCard({
         !pressableToAdd &&
           variant === "available" &&
           "hover:border-primary/20 transition-[border-color,box-shadow] duration-300 hover:shadow-sm",
-        isSelected && "ring-primary ring-1",
+        isSelected && !showSelectionCheckbox && "ring-primary ring-1",
+        showSelectionCheckbox &&
+          isSelected &&
+          "border-primary/55 bg-primary/[0.08] ring-primary/40 dark:bg-primary/[0.12] ring-1",
+        showSelectionCheckbox && !isSelected && "ring-1 ring-transparent",
         variant === "selected" && "from-primary/5 border-l bg-gradient-to-r to-transparent",
         disabled && "cursor-not-allowed opacity-60",
       )}
@@ -122,7 +130,15 @@ export function ItemCard({
       }
       role={pressableToAdd ? "button" : undefined}
       tabIndex={pressableToAdd ? 0 : undefined}
-      aria-label={pressableToAdd ? `Add ${item.name} to product` : undefined}
+      aria-label={
+        pressableToAdd
+          ? selectionToggle && isSelected
+            ? `Remove ${item.name} from selection`
+            : selectionToggle
+              ? `Add ${item.name} to selection`
+              : `Add ${item.name} to product`
+          : undefined
+      }
       onClick={pressableToAdd ? () => onAdd?.() : undefined}
       onKeyDown={
         pressableToAdd
@@ -136,7 +152,20 @@ export function ItemCard({
       }
     >
       <CardContent>
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-3">
+          {showSelectionCheckbox ? (
+            <div
+              className={cn(
+                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 transition-[border-color,background-color,color,box-shadow]",
+                isSelected
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-muted-foreground/35 bg-muted/30 group-hover:border-primary/50 group-hover:bg-background",
+              )}
+              aria-hidden
+            >
+              {isSelected ? <Check className="size-3.5" strokeWidth={2.75} /> : null}
+            </div>
+          ) : null}
           {/* Content */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-1.5">

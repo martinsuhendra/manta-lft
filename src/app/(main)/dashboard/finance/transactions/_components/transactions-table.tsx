@@ -12,6 +12,7 @@ import { DataTablePagination } from "@/components/data-table/data-table-paginati
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Dialog,
   DialogContent,
@@ -317,13 +318,18 @@ export function TransactionsTable() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                min="1"
-                value={editForm.amount}
-                onChange={(event) => setEditForm((prev) => ({ ...prev, amount: Number(event.target.value) }))}
-              />
+              <Label>Amount (IDR)</Label>
+              <div className="relative">
+                <span className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm font-medium">
+                  Rp
+                </span>
+                <CurrencyInput
+                  placeholder="0"
+                  className="h-9 pl-9 tabular-nums"
+                  value={editForm.amount}
+                  onChange={(value) => setEditForm((prev) => ({ ...prev, amount: value }))}
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Status</Label>

@@ -25,6 +25,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import { type NavGroup, type NavMainItem } from "@/navigation/sidebar/sidebar-items";
 
 interface NavMainProps {
@@ -103,18 +104,25 @@ const NavItemCollapsed = ({ item, isActive }: { item: NavMainItem; isActive: (ur
             <ChevronRight />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-50 space-y-1" side="right" align="start">
+        <DropdownMenuContent className="text-popover-foreground w-50 space-y-1" side="right" align="start">
           {item.subItems?.map((subItem) => (
             <DropdownMenuItem key={subItem.title} asChild>
               <SidebarMenuSubButton
                 key={subItem.title}
                 asChild
-                className="focus-visible:ring-0"
+                className={cn(
+                  "focus-visible:ring-0",
+                  /* Sub-button tokens assume a dark sidebar; in a light popover use surface tokens */
+                  "text-popover-foreground hover:bg-accent hover:text-accent-foreground",
+                  "active:bg-accent active:text-accent-foreground",
+                  "data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground",
+                  "[&>svg]:!text-muted-foreground data-[active=true]:[&>svg]:!text-sidebar-primary-foreground",
+                )}
                 aria-disabled={subItem.comingSoon}
                 isActive={isActive(subItem.url)}
               >
                 <Link href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
-                  {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
+                  {subItem.icon && <subItem.icon className="text-muted-foreground shrink-0" />}
                   <span>{subItem.title}</span>
                   {subItem.comingSoon && <IsComingSoon />}
                 </Link>

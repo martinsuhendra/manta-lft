@@ -29,7 +29,7 @@ export function ProductsGrid({ data, isLoading, onViewProduct, onEditProduct, on
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
       {data.map((product) => (
         <ProductCard
           key={product.id}

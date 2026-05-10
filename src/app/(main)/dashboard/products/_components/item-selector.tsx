@@ -1,7 +1,10 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 
 import { Search, Package } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -18,6 +21,11 @@ interface ItemSelectorProps {
 
 export function ItemSelector({ selectedItems, onItemAdd, availableItems, quotaType }: ItemSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setPendingIds(new Set());
+  }, [quotaType]);
 
   const filteredItems = availableItems.filter(
     (item) =>
@@ -25,6 +33,24 @@ export function ItemSelector({ selectedItems, onItemAdd, availableItems, quotaTy
       (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
+
+  function togglePending(item: Item) {
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+  }
+
+  function handleAddSelected() {
+    if (pendingIds.size === 0) return;
+    const toAdd = availableItems.filter((i) => pendingIds.has(i.id));
+    for (const item of toAdd) onItemAdd(item);
+    setPendingIds(new Set());
+  }
+
+  const pendingCount = pendingIds.size;
 
   return (
     <Card>
@@ -35,7 +61,9 @@ export function ItemSelector({ selectedItems, onItemAdd, availableItems, quotaTy
         </CardTitle>
         <CardDescription>
           {quotaType
-            ? `Select items to add with ${quotaType === "INDIVIDUAL" ? "individual" : quotaType === "SHARED" ? "shared pool" : "free"} quota type`
+            ? `Click items to select multiple, then add them together. Quota: ${
+                quotaType === "INDIVIDUAL" ? "individual" : quotaType === "SHARED" ? "shared pool" : "free"
+              }.`
             : "Select a quota type above to start adding items"}
         </CardDescription>
       </CardHeader>
@@ -77,8 +105,9 @@ export function ItemSelector({ selectedItems, onItemAdd, availableItems, quotaTy
                   <ItemCard
                     key={item.id}
                     item={item}
-                    isSelected={selectedItems.includes(item.id)}
-                    onAdd={() => onItemAdd(item)}
+                    isSelected={pendingIds.has(item.id)}
+                    selectionToggle
+                    onAdd={() => togglePending(item)}
                     variant="available"
                     showActions={true}
                   />
@@ -86,6 +115,23 @@ export function ItemSelector({ selectedItems, onItemAdd, availableItems, quotaTy
               </div>
             )}
           </div>
+
+          {quotaType && filteredItems.length > 0 ? (
+            <div className="flex items-center justify-end gap-3 border-t pt-4">
+              {pendingCount > 0 ? (
+                <span className="text-muted-foreground text-sm">{pendingCount} selected — click again to deselect</span>
+              ) : (
+                <span className="text-muted-foreground text-sm">Select one or more items, then add</span>
+              )}
+              <Button type="button" onClick={handleAddSelected} disabled={pendingCount === 0}>
+                {pendingCount === 0
+                  ? "Add to product"
+                  : pendingCount === 1
+                    ? "Add 1 item to product"
+                    : `Add ${pendingCount} items to product`}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>

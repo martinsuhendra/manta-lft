@@ -73,7 +73,7 @@ export function createTransactionColumns({
     {
       accessorKey: "createdAt",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
-      cell: ({ row }) => format(new Date(row.original.createdAt), "dd MMM yyyy, HH:mm"),
+      cell: ({ row }) => format(new Date(row.original.createdAt), "dd MMM yyyy"),
     },
     {
       id: "actions",
