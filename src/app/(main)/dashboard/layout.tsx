@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { USER_ROLES } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { getAccessibleBrandSummariesForUser } from "@/server/brands/get-accessible-brand-summaries";
 import { getPreference } from "@/server/server-actions";
 import {
   SIDEBAR_VARIANT_VALUES,
@@ -38,7 +39,26 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
 
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
-  const activeBrandId = cookieStore.get("active_brand_id")?.value ?? "ALL";
+
+  const accessibleBrands = await getAccessibleBrandSummariesForUser({
+    userId: session.user.id,
+    role: session.user.role,
+  });
+  const allowedBrandIds = new Set(accessibleBrands.map((b) => b.id));
+  const fallbackBrandId = accessibleBrands.length > 0 ? accessibleBrands[0].id : "ALL";
+
+  const cookieBrand = cookieStore.get("active_brand_id")?.value;
+
+  let activeBrandId: string | "ALL";
+  if (cookieBrand === undefined || cookieBrand === "") {
+    activeBrandId = fallbackBrandId;
+  } else if (cookieBrand === "ALL") {
+    activeBrandId = "ALL";
+  } else if (allowedBrandIds.has(cookieBrand)) {
+    activeBrandId = cookieBrand;
+  } else {
+    activeBrandId = fallbackBrandId;
+  }
 
   const [sidebarVariant, sidebarCollapsible, contentLayout] = await Promise.all([
     getPreference<SidebarVariant>("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),

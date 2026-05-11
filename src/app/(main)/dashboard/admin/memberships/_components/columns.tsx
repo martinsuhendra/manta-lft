@@ -86,10 +86,7 @@ export const createMembershipColumns = (actions: ActionsType): ColumnDef<Members
       const isExpired = expiredAt < new Date();
 
       return (
-        <div className="flex flex-col">
-          <span className={isExpired ? "text-destructive font-medium" : ""}>{format(expiredAt, "MMM dd, yyyy")}</span>
-          <span className="text-muted-foreground text-sm">{format(expiredAt, "HH:mm")}</span>
-        </div>
+        <span className={isExpired ? "text-destructive font-medium" : ""}>{format(expiredAt, "dd MMM, yyyy")}</span>
       );
     },
   },
@@ -98,12 +95,7 @@ export const createMembershipColumns = (actions: ActionsType): ColumnDef<Members
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const createdAt = new Date(row.getValue("createdAt"));
-      return (
-        <div className="flex flex-col">
-          <span>{format(createdAt, "MMM dd, yyyy")}</span>
-          <span className="text-muted-foreground text-sm">{format(createdAt, "HH:mm")}</span>
-        </div>
-      );
+      return <span>{format(createdAt, "dd MMM, yyyy")}</span>;
     },
   },
   {

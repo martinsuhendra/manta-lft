@@ -40,11 +40,12 @@ export async function middleware(request: NextRequest) {
   // Expose pathname so root layout can force dark theme for customer (public marketing) pages
   response.headers.set("x-pathname", nextUrl.pathname);
 
-  // On dashboard, ensure active_brand_id cookie is set (default from JWT if missing)
+  // On dashboard: only seed cookie from JWT when it is a concrete brand id (not "ALL").
+  // "ALL" + missing cookie are handled in dashboard layout → first accessible brand + client sync.
   if (isLoggedIn && isProtectedRoute) {
     const activeBrandId = request.cookies.get("active_brand_id")?.value;
     const defaultBrandId = (token as { defaultBrandId?: string }).defaultBrandId;
-    if (!activeBrandId && defaultBrandId) {
+    if (!activeBrandId && defaultBrandId && defaultBrandId !== "ALL") {
       response.cookies.set("active_brand_id", defaultBrandId, { path: "/" });
     }
   }

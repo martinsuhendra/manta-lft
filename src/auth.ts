@@ -101,7 +101,6 @@ export const authOptions = {
           token.emailVerified = refreshedUser.emailVerified;
           token.role = refreshedUser.role;
           token.phoneNo = refreshedUser.phoneNo;
-          token.defaultBrandId = "ALL";
         }
       }
 

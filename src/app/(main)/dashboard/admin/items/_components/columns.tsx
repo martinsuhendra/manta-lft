@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Clock, Eye, Edit, Trash2, MoreHorizontal, Calendar, Users } from "lucide-react";
+import { Building2, Eye, Edit, Trash2, MoreHorizontal, Users } from "lucide-react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Button } from "@/components/ui/button";
@@ -102,12 +102,7 @@ export const createItemColumns = (actions: ItemActions): ColumnDef<Item>[] => [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Duration" />,
     cell: ({ row }) => {
       const duration = row.original.duration;
-      return (
-        <div className="flex items-center gap-1 text-sm">
-          <Clock className="h-3 w-3" />
-          {duration} min
-        </div>
-      );
+      return <span className="text-sm">{duration} min</span>;
     },
   },
   {
@@ -115,12 +110,7 @@ export const createItemColumns = (actions: ItemActions): ColumnDef<Item>[] => [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Max Capacity" />,
     cell: ({ row }) => {
       const capacity = row.original.capacity;
-      return (
-        <div className="flex items-center gap-1 text-sm">
-          <Users className="h-3 w-3" />
-          {capacity}
-        </div>
-      );
+      return <span className="text-sm">{capacity}</span>;
     },
   },
   {
@@ -141,20 +131,6 @@ export const createItemColumns = (actions: ItemActions): ColumnDef<Item>[] => [
         <StatusBadge variant="outline" className="gap-1">
           <Users className="h-3 w-3" />
           {teacherCount}
-        </StatusBadge>
-      );
-    },
-  },
-  {
-    id: "schedules",
-    header: "Schedules",
-    cell: ({ row }) => {
-      const item = row.original as Item & { _count?: { schedules: number } };
-      const scheduleCount = item._count?.schedules || 0;
-      return (
-        <StatusBadge variant="outline" className="gap-1">
-          <Calendar className="h-3 w-3" />
-          {scheduleCount}
         </StatusBadge>
       );
     },
