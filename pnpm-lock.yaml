@@ -80,9 +80,6 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.1)
@@ -174,6 +171,9 @@ importers:
       baseline-browser-mapping:
         specifier: ^2.10.0
         version: 2.10.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       dotenv-cli:
         specifier: ^11.0.0
         version: 11.0.0

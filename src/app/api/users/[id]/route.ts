@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/api-utils";
 import { deleteCloudinaryAsset } from "@/lib/cloudinary";
 import { parseCloudinaryAsset, resolveAssetUrl } from "@/lib/cloudinary-asset";
 import { prisma } from "@/lib/generated/prisma";
+import { assertRoleAssignmentAllowed } from "@/lib/rbac";
 import { USER_ROLES } from "@/lib/types";
 
 function normalizePhoneNumber(value: string) {
@@ -142,9 +143,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         avatarAssetRaw === null ||
         validatedData.image === null);
 
-    // Check if trying to update role and if user has permission
-    if (validatedData.role && session.user.role !== USER_ROLES.DEVELOPER) {
-      return NextResponse.json({ error: "Only DEVELOPER users can edit user roles" }, { status: 403 });
+    if (validatedData.role && validatedData.role !== targetUser.role) {
+      const roleCheck = assertRoleAssignmentAllowed(session.user.role, validatedData.role, targetUser.role);
+      if (!roleCheck.ok) {
+        return NextResponse.json({ error: roleCheck.error }, { status: 403 });
+      }
     }
 
     // Check email uniqueness if email is being updated

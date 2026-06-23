@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
 
 const FormSchema = z.object({
@@ -92,13 +93,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  {...field}
-                />
+                <PasswordInput id="password" placeholder="••••••••" autoComplete="current-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

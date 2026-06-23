@@ -82,13 +82,13 @@ export type FormData = z.infer<typeof formSchema>;
 interface MemberFormProps {
   mode: "add" | "edit";
   member: Member | null;
+  actorRole?: string;
   canEditRoles: boolean;
-  canCreateSuperAdmin: boolean;
   onSubmit: (data: FormData) => void;
   isPending: boolean;
 }
 
-export function MemberForm({ mode, member, canEditRoles, canCreateSuperAdmin, onSubmit, isPending }: MemberFormProps) {
+export function MemberForm({ mode, member, actorRole, canEditRoles, onSubmit, isPending }: MemberFormProps) {
   const memberWithExtras = member as Member & { image?: string | null; bio?: string | null };
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -138,7 +138,7 @@ export function MemberForm({ mode, member, canEditRoles, canCreateSuperAdmin, on
     }
   }, [mode, member, form]);
 
-  const availableRoles = getAvailableRoles(mode, canCreateSuperAdmin, canEditRoles, member?.role);
+  const availableRoles = getAvailableRoles(mode, actorRole, member?.role);
   const [isUploading, setIsUploading] = React.useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -224,7 +224,9 @@ export function MemberForm({ mode, member, canEditRoles, canCreateSuperAdmin, on
               </Select>
               <FormMessage />
               {mode === "edit" && !canEditRoles && (
-                <p className="text-muted-foreground text-xs">Only SUPERADMIN or DEVELOPER users can edit roles</p>
+                <p className="text-muted-foreground text-xs">
+                  Only ADMIN, SUPERADMIN, or DEVELOPER users can edit roles
+                </p>
               )}
             </FormItem>
           )}

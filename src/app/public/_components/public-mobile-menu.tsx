@@ -67,8 +67,12 @@ export function PublicMobileMenu({
                 <SheetClose asChild key={item.href}>
                   <Link href={item.href}>
                     <Button
-                      variant={isNavItemActive(pathname, activeHash, item.href) ? "secondary" : "ghost"}
-                      className="w-full justify-start rounded-lg text-base"
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-start rounded-lg text-base",
+                        isNavItemActive(pathname, activeHash, item.href) &&
+                          "bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20",
+                      )}
                     >
                       {item.label}
                     </Button>

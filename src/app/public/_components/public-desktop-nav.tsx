@@ -21,11 +21,9 @@ export function PublicDesktopNav({ pathname, activeHash, isTransparent }: Public
             size="sm"
             className={cn(
               "rounded-full px-4 transition-colors",
-              isTransparent && "text-white hover:bg-white/10 hover:text-white",
+              "text-white hover:bg-white/10 hover:text-white",
               isNavItemActive(pathname, activeHash, item.href) &&
-                (isTransparent
-                  ? "bg-white/20 text-white hover:bg-white/25"
-                  : "bg-primary/10 text-primary hover:bg-primary/20"),
+                "bg-brand-primary hover:bg-brand-primary/90 text-white",
             )}
           >
             {item.label}

@@ -49,23 +49,25 @@ export function ShopHeader({ session }: ShopHeaderProps) {
       className={cn(
         "fixed top-0 right-0 left-0 z-50 transition-all duration-300 ease-in-out",
         isScrolled
-          ? "border-border/40 bg-background/80 border-b shadow-sm backdrop-blur-md"
+          ? "border-border/40 bg-brand-accent border-b shadow-sm backdrop-blur-md"
           : isDarkHeroPage
             ? "border-transparent bg-transparent"
-            : "bg-background/80 border-border/40 border-b backdrop-blur-md",
+            : "bg-brand-accent border-border/40 border-b backdrop-blur-md",
       )}
     >
       <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-5 sm:px-4 sm:py-6">
         <Link href="/public" className="group flex shrink-0 items-center gap-2">
           <div className="relative h-8 w-8 transition-transform group-hover:scale-110">
-            <Image src="/manta-logo.jpg" alt="Manta logo" fill sizes="32px" priority />
+            <Image
+              src="/manta-logo.jpg"
+              alt="Manta logo"
+              fill
+              sizes="32px"
+              priority
+              className="rounded-full object-cover"
+            />
           </div>
-          <span
-            className={cn(
-              "text-base font-bold tracking-tight transition-colors sm:text-xl",
-              isTransparent && "text-white",
-            )}
-          >
+          <span className="text-base font-bold tracking-tight text-white transition-colors sm:text-xl">
             {APP_CONFIG.name}
           </span>
         </Link>
