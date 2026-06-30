@@ -31,9 +31,6 @@ export function ShopHeader({ session }: ShopHeaderProps) {
   const [signInOpen, setSignInOpen] = useState(false);
   const { activeHash, isScrolled } = useHeaderScrollSpy({ pathname });
 
-  // Pages that start with a dark section where we want transparent header
-  const isDarkHeroPage = pathname === "/public";
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -42,17 +39,13 @@ export function ShopHeader({ session }: ShopHeaderProps) {
     await signOut({ callbackUrl: "/public" });
   };
 
-  const isTransparent = isDarkHeroPage && !isScrolled;
-
   return (
     <header
       className={cn(
         "fixed top-0 right-0 left-0 z-50 transition-all duration-300 ease-in-out",
         isScrolled
-          ? "border-border/40 bg-brand-accent border-b shadow-sm backdrop-blur-md"
-          : isDarkHeroPage
-            ? "border-transparent bg-transparent"
-            : "bg-brand-accent border-border/40 border-b backdrop-blur-md",
+          ? "border-border/40 bg-brand-accent/80 border-b shadow-sm backdrop-blur-md"
+          : "bg-brand-accent border-transparent",
       )}
     >
       <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-5 sm:px-4 sm:py-6">
@@ -72,7 +65,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
           </span>
         </Link>
 
-        <PublicDesktopNav pathname={pathname} activeHash={activeHash} isTransparent={isTransparent} />
+        <PublicDesktopNav pathname={pathname} activeHash={activeHash} />
 
         <nav className="hidden items-center justify-end gap-2 md:flex">
           {!mounted ? (
@@ -84,12 +77,12 @@ export function ShopHeader({ session }: ShopHeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={cn("transition-colors", isTransparent && "text-white hover:bg-white/10 hover:text-white")}
+                  className="text-white transition-colors hover:bg-white/10 hover:text-white"
                 >
                   My Account
                 </Button>
               </Link>
-              <Button variant={isTransparent ? "secondary" : "outline"} size="sm" onClick={handleSignOut}>
+              <Button variant="secondary" size="sm" onClick={handleSignOut}>
                 Sign Out
               </Button>
             </>
@@ -98,13 +91,13 @@ export function ShopHeader({ session }: ShopHeaderProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("transition-colors", isTransparent && "text-white hover:bg-white/10 hover:text-white")}
+                className="text-white transition-colors hover:bg-white/10 hover:text-white"
                 onClick={() => setSignInOpen(true)}
               >
                 Sign In
               </Button>
               <SignUpDialog>
-                <Button size="sm" variant={isTransparent ? "secondary" : "default"}>
+                <Button size="sm" variant="default">
                   Sign Up
                 </Button>
               </SignUpDialog>
@@ -115,7 +108,6 @@ export function ShopHeader({ session }: ShopHeaderProps) {
         <PublicMobileMenu
           isOpen={isMobileMenuOpen}
           onOpenChange={setIsMobileMenuOpen}
-          isTransparent={isTransparent}
           pathname={pathname}
           activeHash={activeHash}
           mounted={mounted}

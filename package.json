@@ -1,6 +1,6 @@
 {
   "name": "manta",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "dotenv -e .env.development.local -- prisma generate && dotenv -e .env.development.local -- next dev --turbopack",
@@ -18,7 +18,10 @@
     "generate:presets": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/scripts/generate-theme-presets.ts",
     "seed:super-admin": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed-super-admin.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "changeset": "changeset",
+    "release": "changeset version",
+    "release:tag": "changeset tag"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
@@ -73,6 +76,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.16.0",
     "@tailwindcss/postcss": "^4.1.13",

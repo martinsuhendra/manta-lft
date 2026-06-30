@@ -8,10 +8,9 @@ import { isNavItemActive, NAV_ITEMS } from "./public-nav";
 interface PublicDesktopNavProps {
   pathname: string;
   activeHash: string;
-  isTransparent: boolean;
 }
 
-export function PublicDesktopNav({ pathname, activeHash, isTransparent }: PublicDesktopNavProps) {
+export function PublicDesktopNav({ pathname, activeHash }: PublicDesktopNavProps) {
   return (
     <nav className="hidden items-center gap-1 lg:flex">
       {NAV_ITEMS.map((item) => (

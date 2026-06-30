@@ -13,18 +13,20 @@ import type { z } from "zod";
 import { BirthdayPicker } from "@/components/ui/birthday-picker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { signUpFormSchema } from "@/lib/validators";
+
+import {
+  Dialog,
+  DialogTrigger,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "./public-dialog";
 
 interface PublicWaiverResponse {
   contentHtml: string;
@@ -179,171 +181,174 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create your account</DialogTitle>
-          <DialogDescription>Enter your details to register as a member.</DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input id="name" type="text" placeholder="John Doe" autoComplete="name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Address</FormLabel>
-                  <FormControl>
-                    <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input id="phoneNo" type="tel" placeholder="+1234567890" autoComplete="tel" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="emergencyContactName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Emergency Contact Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="emergencyContactName"
-                      type="text"
-                      placeholder="Jane Doe"
-                      autoComplete="name"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="emergencyContact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Emergency Contact</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="emergencyContact"
-                      type="tel"
-                      placeholder="+1234567890"
-                      autoComplete="tel-national"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="birthday"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Birthday</FormLabel>
-                  <FormControl>
-                    <BirthdayPicker
-                      ref={field.ref}
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="Pick your birthday"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="waiverVersion"
-              render={({ field }) => <input type="hidden" value={field.value} readOnly />}
-            />
-            <FormField
-              control={form.control}
-              name="acceptWaiver"
-              render={({ field }) => <input type="hidden" value={String(field.value)} readOnly />}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading || isWaiverLoading}>
-                {isLoading || isWaiverLoading ? "Preparing..." : "Register"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
+        <PublicDialogContent className="max-h-[90vh] sm:max-w-xl">
+          <PublicDialogHeader>
+            <PublicDialogTitle>Create your account</PublicDialogTitle>
+            <PublicDialogDescription>Enter your details to register as a member.</PublicDialogDescription>
+          </PublicDialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <PublicDialogBody className="max-h-[55vh] space-y-4 overflow-y-auto">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input id="name" type="text" placeholder="John Doe" autoComplete="name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input id="phoneNo" type="tel" placeholder="+1234567890" autoComplete="tel" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="emergencyContactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Emergency Contact Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="emergencyContactName"
+                          type="text"
+                          placeholder="Jane Doe"
+                          autoComplete="name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="emergencyContact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Emergency Contact</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="emergencyContact"
+                          type="tel"
+                          placeholder="+1234567890"
+                          autoComplete="tel-national"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Birthday</FormLabel>
+                      <FormControl>
+                        <BirthdayPicker
+                          ref={field.ref}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder="Pick your birthday"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="waiverVersion"
+                  render={({ field }) => <input type="hidden" value={field.value} readOnly />}
+                />
+                <FormField
+                  control={form.control}
+                  name="acceptWaiver"
+                  render={({ field }) => <input type="hidden" value={String(field.value)} readOnly />}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="••••••••"
+                          autoComplete="new-password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </PublicDialogBody>
+              <PublicDialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading || isWaiverLoading}>
+                  {isLoading || isWaiverLoading ? "Preparing..." : "Register"}
+                </Button>
+              </PublicDialogFooter>
+            </form>
+          </Form>
+        </PublicDialogContent>
+      </Dialog>
 
       <Dialog
         open={isWaiverDialogOpen}
@@ -353,26 +358,33 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
           if (!open) setIsWaiverConfirmed(false);
         }}
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Waiver and release of liability</DialogTitle>
-            <DialogDescription>Please review and agree to the waiver to complete your registration.</DialogDescription>
-          </DialogHeader>
+        <PublicDialogContent className="max-w-2xl">
+          <PublicDialogHeader>
+            <PublicDialogTitle>Waiver and release of liability</PublicDialogTitle>
+            <PublicDialogDescription>
+              Please review and agree to the waiver to complete your registration.
+            </PublicDialogDescription>
+          </PublicDialogHeader>
 
-          <div className="max-h-[55vh] overflow-y-auto rounded-md border p-4">
-            <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: waiver?.contentHtml ?? "" }} />
+          <PublicDialogBody className="space-y-4">
+            <div className="max-h-[55vh] overflow-y-auto rounded-md border p-4">
+              <div className="prose prose-sm max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: waiver?.contentHtml ?? "" }} />
+              </div>
             </div>
-          </div>
 
-          <div className="rounded-md border p-3">
-            <label className="flex cursor-pointer items-start gap-3 text-sm">
-              <Checkbox checked={isWaiverConfirmed} onCheckedChange={(value) => setIsWaiverConfirmed(Boolean(value))} />
-              <span>I have read this waiver and voluntarily agree to its terms.</span>
-            </label>
-          </div>
+            <div className="rounded-md border p-3">
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <Checkbox
+                  checked={isWaiverConfirmed}
+                  onCheckedChange={(value) => setIsWaiverConfirmed(Boolean(value))}
+                />
+                <span>I have read this waiver and voluntarily agree to its terms.</span>
+              </label>
+            </div>
+          </PublicDialogBody>
 
-          <DialogFooter>
+          <PublicDialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -387,9 +399,9 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
             <Button type="button" onClick={handleConfirmWaiverAndRegister} disabled={isLoading || !isWaiverConfirmed}>
               {isLoading ? "Creating account..." : "Agree and create account"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
+          </PublicDialogFooter>
+        </PublicDialogContent>
       </Dialog>
-    </Dialog>
+    </>
   );
 }

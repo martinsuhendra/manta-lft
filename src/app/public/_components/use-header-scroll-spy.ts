@@ -25,6 +25,9 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
 
     function handleScroll() {
       setIsScrolled(window.scrollY > 10);
+      if (window.scrollY < 120) {
+        setActiveHash("");
+      }
     }
 
     function handleHashChange() {

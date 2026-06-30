@@ -41,13 +41,14 @@ const facilities = [
 
 export function FacilitiesSection() {
   return (
-    <SectionWithPattern className="border-border bg-background border-t py-24 sm:py-32">
+    <SectionWithPattern className="border-border/60 sporty-section-fill-white border-t py-24 sm:py-32">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-foreground text-2xl font-black tracking-tighter uppercase sm:text-3xl md:text-4xl md:text-5xl">
+          <p className="text-brand-primary text-sm font-semibold tracking-widest uppercase">Our Space</p>
+          <h2 className="text-brand-accent mt-2 text-2xl font-black tracking-tighter uppercase sm:text-3xl md:text-4xl md:text-5xl">
             World-Class Facilities
           </h2>
-          <p className="text-muted-foreground mt-3 text-base sm:mt-4 sm:text-lg">
+          <p className="text-brand-accent/70 mt-3 text-base sm:mt-4 sm:text-lg">
             Everything you need to perform at your best, all under one roof.
           </p>
         </div>
@@ -55,16 +56,18 @@ export function FacilitiesSection() {
           {facilities.map((facility) => (
             <Card
               key={facility.name}
-              className="border-border bg-card hover:border-primary/50 hover:shadow-primary/5 transition-all hover:shadow-lg"
+              className="border-brand-accent/10 shadow-brand-accent/5 hover:border-brand-primary/30 hover:shadow-brand-primary/10 bg-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
             >
               <CardHeader>
-                <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                  <facility.icon className="text-primary h-6 w-6" />
+                <div className="bg-brand-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
+                  <facility.icon className="text-brand-primary h-6 w-6" />
                 </div>
-                <CardTitle className="text-lg font-bold tracking-wide uppercase">{facility.name}</CardTitle>
+                <CardTitle className="text-brand-accent text-lg font-bold tracking-wide uppercase">
+                  {facility.name}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground text-sm leading-6">{facility.description}</p>
+                <p className="text-brand-accent/65 text-sm leading-6">{facility.description}</p>
               </CardContent>
             </Card>
           ))}

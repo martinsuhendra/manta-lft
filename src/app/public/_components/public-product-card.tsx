@@ -13,20 +13,21 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useMidtransSnap } from "@/lib/hooks/use-midtrans-snap";
 import { formatPrice } from "@/lib/utils";
 
+import {
+  Dialog,
+  DialogTrigger,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "./public-dialog";
 import { SignUpDialog } from "./sign-up-dialog";
 
 export interface PublicProduct {
@@ -171,8 +172,8 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
   };
 
   return (
-    <div className="group border-primary bg-card hover:border-foreground relative flex h-full flex-col overflow-hidden border-r-4 border-b-4 transition-all duration-300">
-      <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
+    <div className="group border-brand-primary hover:border-brand-accent shadow-brand-accent/5 hover:shadow-brand-primary/10 relative flex h-full flex-col overflow-hidden border-r-4 border-b-4 bg-white shadow-md transition-all duration-300 hover:shadow-lg">
+      <div className="bg-brand-accent/5 relative aspect-[16/10] w-full overflow-hidden">
         {product.image ? (
           <>
             <Image
@@ -183,32 +184,32 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
               className="object-cover grayscale transition-all duration-500 group-hover:grayscale-0"
             />
             <div
-              className="bg-primary/10 absolute inset-0 transition-colors duration-300 group-hover:bg-transparent"
+              className="bg-brand-primary/10 absolute inset-0 transition-colors duration-300 group-hover:bg-transparent"
               aria-hidden
             />
           </>
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <Package className="text-muted-foreground h-14 w-14 opacity-50" />
+            <Package className="text-brand-accent/30 h-14 w-14 opacity-50" />
           </div>
         )}
-        <div className="bg-primary text-primary-foreground absolute bottom-0 left-0 px-6 py-2 text-sm font-black uppercase italic">
+        <div className="bg-brand-primary absolute bottom-0 left-0 px-6 py-2 text-sm font-black text-white uppercase italic">
           {product.validDays} days
         </div>
       </div>
 
       <div className="flex flex-1 flex-col px-4 py-5 sm:px-6 sm:py-6 md:p-10">
-        <h3 className="text-foreground mb-3 text-xl font-black tracking-tighter uppercase italic sm:mb-4 sm:text-2xl md:text-3xl">
+        <h3 className="text-brand-accent mb-3 text-xl font-black tracking-tighter uppercase italic sm:mb-4 sm:text-2xl md:text-3xl">
           {product.name}
         </h3>
         {product.description && (
-          <p className="text-muted-foreground mb-4 line-clamp-2 text-sm leading-relaxed font-medium sm:mb-6 md:mb-8 md:line-clamp-none md:text-base">
+          <p className="text-brand-accent/65 mb-4 line-clamp-2 text-sm leading-relaxed font-medium sm:mb-6 md:mb-8 md:line-clamp-none md:text-base">
             {product.description}
           </p>
         )}
 
         <div className="mb-4 flex items-baseline justify-between gap-2 sm:mb-6 md:mb-8">
-          <span className="text-foreground text-2xl font-black tracking-tight">{formatPrice(product.price)}</span>
+          <span className="text-brand-accent text-2xl font-black tracking-tight">{formatPrice(product.price)}</span>
         </div>
 
         {product.features.length > 0 && (
@@ -216,7 +217,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
             {product.features.map((feature) => (
               <span
                 key={feature}
-                className="border-border bg-accent truncate px-2 py-0.5 text-[9px] font-black tracking-widest uppercase sm:px-3 sm:py-1 sm:text-[10px]"
+                className="border-brand-accent/15 bg-brand-primary/8 text-brand-accent truncate border px-2 py-0.5 text-[9px] font-black tracking-widest uppercase sm:px-3 sm:py-1 sm:text-[10px]"
               >
                 {feature}
               </span>
@@ -225,11 +226,11 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
         )}
 
         {product.whatIsIncluded && (
-          <div className="border-border mb-6 border-t pt-4 md:mb-8">
+          <div className="border-brand-accent/15 mb-6 border-t pt-4 md:mb-8">
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground -ml-2 h-auto p-0 text-xs font-semibold tracking-wider uppercase hover:bg-transparent"
+              className="text-brand-accent/60 hover:text-brand-accent -ml-2 h-auto p-0 text-xs font-semibold tracking-wider uppercase hover:bg-transparent"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               What&apos;s included
@@ -241,7 +242,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
             </Button>
             {isExpanded && (
               <div
-                className="text-muted-foreground prose prose-sm mt-3 max-w-none text-sm [&_li]:ml-0 [&_ol]:ml-3 [&_ol]:list-decimal [&_ul]:ml-3 [&_ul]:list-disc"
+                className="text-brand-accent/65 prose prose-sm mt-3 max-w-none text-sm [&_li]:ml-0 [&_ol]:ml-3 [&_ol]:list-decimal [&_ul]:ml-3 [&_ul]:list-disc"
                 dangerouslySetInnerHTML={{ __html: product.whatIsIncluded }}
               />
             )}
@@ -251,7 +252,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
         <div className="mt-auto pt-2">
           {!mounted ? (
             <Button
-              className="text-primary flex items-center gap-4 font-black tracking-widest uppercase hover:gap-6"
+              className="text-brand-primary flex items-center gap-4 font-black tracking-widest uppercase hover:gap-6"
               variant="ghost"
               disabled
             >
@@ -260,7 +261,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
           ) : !session ? (
             <SignUpDialog>
               <Button
-                className="text-primary flex items-center gap-4 font-black tracking-widest uppercase transition-all hover:gap-6"
+                className="text-brand-primary flex items-center gap-4 font-black tracking-widest uppercase transition-all hover:gap-6"
                 variant="ghost"
               >
                 Purchase Now <ArrowRight className="h-5 w-5" />
@@ -270,57 +271,59 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  className="text-primary flex w-full items-center justify-center gap-4 font-black tracking-widest uppercase transition-all hover:gap-6"
+                  className="text-brand-primary flex w-full items-center justify-center gap-4 font-black tracking-widest uppercase transition-all hover:gap-6"
                   variant="ghost"
                 >
                   Purchase Now <ArrowRight className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Purchase {product.name}</DialogTitle>
-                  <DialogDescription>
+              <PublicDialogContent>
+                <PublicDialogHeader>
+                  <PublicDialogTitle>Purchase {product.name}</PublicDialogTitle>
+                  <PublicDialogDescription>
                     Enter your information to complete your membership purchase and continue with payment.
-                  </DialogDescription>
-                </DialogHeader>
+                  </PublicDialogDescription>
+                </PublicDialogHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handlePurchase)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="customerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" disabled={!!session.user} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="customerEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="john@example.com" disabled={!!session.user} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="bg-muted rounded-lg p-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Total</span>
-                        <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                  <form onSubmit={form.handleSubmit(handlePurchase)}>
+                    <PublicDialogBody className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="customerName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John Doe" disabled={!!session.user} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customerEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="john@example.com" disabled={!!session.user} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="bg-muted rounded-lg p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Total</span>
+                          <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                        </div>
+                        <p className="text-muted-foreground mt-2 text-xs">
+                          Valid for {product.validDays} days from purchase date
+                        </p>
                       </div>
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        Valid for {product.validDays} days from purchase date
-                      </p>
-                    </div>
-                    <DialogFooter>
+                    </PublicDialogBody>
+                    <PublicDialogFooter>
                       <Button
                         type="button"
                         variant="outline"
@@ -346,10 +349,10 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
                           "Activate Free Trial"
                         )}
                       </Button>
-                    </DialogFooter>
+                    </PublicDialogFooter>
                   </form>
                 </Form>
-              </DialogContent>
+              </PublicDialogContent>
             </Dialog>
           )}
         </div>

@@ -23,7 +23,6 @@ import { SignUpDialog } from "./sign-up-dialog";
 interface PublicMobileMenuProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  isTransparent: boolean;
   pathname: string;
   activeHash: string;
   mounted: boolean;
@@ -35,7 +34,6 @@ interface PublicMobileMenuProps {
 export function PublicMobileMenu({
   isOpen,
   onOpenChange,
-  isTransparent,
   pathname,
   activeHash,
   mounted,
@@ -49,7 +47,7 @@ export function PublicMobileMenu({
         <Button
           variant="ghost"
           size="icon"
-          className={cn("transition-colors", isTransparent && "text-white hover:bg-white/10 hover:text-white")}
+          className="text-white transition-colors hover:bg-white/10 hover:text-white"
           onClick={() => onOpenChange(true)}
         >
           <Menu className="h-5 w-5" />

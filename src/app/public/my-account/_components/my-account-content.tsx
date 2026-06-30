@@ -16,14 +16,6 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { BirthdayPicker } from "@/components/ui/birthday-picker";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +29,16 @@ import { APP_CONFIG } from "@/config/app-config";
 import { useMemberCancelBooking } from "@/hooks/use-member-sessions";
 import { useMidtransSnap } from "@/lib/hooks/use-midtrans-snap";
 import { formatPrice } from "@/lib/utils";
+
+import {
+  Dialog,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "../../_components/public-dialog";
 
 interface AccountData {
   user: {
@@ -778,103 +780,107 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>Update your account information. Please contact admin for support.</DialogDescription>
-          </DialogHeader>
+        <PublicDialogContent>
+          <PublicDialogHeader>
+            <PublicDialogTitle>Edit Profile</PublicDialogTitle>
+            <PublicDialogDescription>
+              Update your account information. Please contact admin for support.
+            </PublicDialogDescription>
+          </PublicDialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <PublicDialogBody className="max-h-[60vh] space-y-4 overflow-y-auto">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input id="name" type="text" placeholder="John Doe" autoComplete="name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phoneNo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input id="phoneNo" type="tel" placeholder="+1234567890" autoComplete="tel" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="emergencyContact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Emergency Contact</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="emergencyContact"
+                          type="tel"
+                          placeholder="+1234567890"
+                          autoComplete="tel-national"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Birthday</FormLabel>
+                      <FormControl>
+                        <BirthdayPicker
+                          ref={field.ref}
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          placeholder="Pick your birthday"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="bg-muted rounded-lg p-4">
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input id="name" type="text" placeholder="John Doe" autoComplete="name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phoneNo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input id="phoneNo" type="tel" placeholder="+1234567890" autoComplete="tel" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="emergencyContact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        id="emergencyContact"
-                        type="tel"
-                        placeholder="+1234567890"
-                        autoComplete="tel-national"
-                        {...field}
+                        id="email"
+                        type="email"
+                        value={accountData.user.email || ""}
+                        disabled
+                        className="bg-background"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <p className="text-muted-foreground text-xs">Contact admin to change email.</p>
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthday"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Birthday</FormLabel>
-                    <FormControl>
-                      <BirthdayPicker
-                        ref={field.ref}
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        placeholder="Pick your birthday"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="bg-muted rounded-lg p-4">
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={accountData.user.email || ""}
-                      disabled
-                      className="bg-background"
-                    />
-                  </FormControl>
-                  <p className="text-muted-foreground text-xs">Contact admin to change email.</p>
-                </FormItem>
-              </div>
-              <DialogFooter>
+                </div>
+              </PublicDialogBody>
+              <PublicDialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isUpdating}>
                   {isUpdating ? "Updating..." : "Save Changes"}
                 </Button>
-              </DialogFooter>
+              </PublicDialogFooter>
             </form>
           </Form>
-        </DialogContent>
+        </PublicDialogContent>
       </Dialog>
     </div>
   );

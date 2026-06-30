@@ -7,14 +7,6 @@ import { format } from "date-fns";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +18,16 @@ import {
   useSessionEligibility,
   type MemberSession,
 } from "@/hooks/use-member-sessions";
+
+import {
+  Dialog,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "../../_components/public-dialog";
 
 interface BookingModalProps {
   session: MemberSession | null;
@@ -104,17 +106,17 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
         if (!open) setSelectedMembershipId("");
       }}
     >
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{session.item.name}</DialogTitle>
-          <DialogDescription>
+      <PublicDialogContent className="max-w-lg">
+        <PublicDialogHeader>
+          <PublicDialogTitle>{session.item.name}</PublicDialogTitle>
+          <PublicDialogDescription>
             {format(new Date(session.date), "EEEE, MMMM d, yyyy")} · {session.startTime}
             {session.endTime ? ` – ${session.endTime}` : ""}
             {session.teacher && <> · {session.teacher.name ?? session.teacher.email ?? "—"}</>}
-          </DialogDescription>
-        </DialogHeader>
+          </PublicDialogDescription>
+        </PublicDialogHeader>
 
-        <div className="space-y-4">
+        <PublicDialogBody className="space-y-4">
           {eligibilityLoading || waiverLoading ? (
             <Skeleton className="h-24 w-full" />
           ) : needsWaiverAcceptance ? (
@@ -198,14 +200,14 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
               </p>
             </div>
           )}
-        </div>
+        </PublicDialogBody>
 
-        <DialogFooter>
+        <PublicDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </PublicDialogFooter>
+      </PublicDialogContent>
     </Dialog>
   );
 }

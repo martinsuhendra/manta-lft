@@ -7,15 +7,17 @@ import { Clock, User, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
+import type { MemberSession } from "@/hooks/use-member-sessions";
+
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import type { MemberSession } from "@/hooks/use-member-sessions";
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "../_components/public-dialog";
 
 import { SignInDialog } from "./sign-in-dialog";
 import { SignUpDialog } from "./sign-up-dialog";
@@ -44,50 +46,50 @@ export function SessionDetailsDialog({ session, open, onOpenChange, onJoinSessio
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <PublicDialogContent className="max-w-md">
+        <PublicDialogHeader className="relative">
           <div
-            className="absolute top-0 right-0 left-0 h-1 rounded-t-lg"
-            style={{ backgroundColor: session.item.color || "#3b82f6" }}
+            className="absolute top-0 right-0 left-0 h-1"
+            style={{ backgroundColor: session.item.color || "#ef5f18" }}
           />
-          <DialogTitle className="pt-2">{session.item.name}</DialogTitle>
-          <DialogDescription>
+          <PublicDialogTitle className="pt-2">{session.item.name}</PublicDialogTitle>
+          <PublicDialogDescription>
             {format(new Date(session.date), "EEEE, MMMM d, yyyy")} · {session.startTime}
             {session.endTime ? ` – ${session.endTime}` : ""}
-          </DialogDescription>
-        </DialogHeader>
+          </PublicDialogDescription>
+        </PublicDialogHeader>
 
-        <div className="space-y-4 py-4">
+        <PublicDialogBody>
           <div className="space-y-3">
             {session.teacher && (
               <div className="flex items-center gap-2 text-sm">
-                <User className="text-muted-foreground h-4 w-4" />
+                <User className="text-brand-accent/50 h-4 w-4" />
                 <span>{session.teacher.name ?? session.teacher.email ?? "Coach"}</span>
               </div>
             )}
             <div className="flex items-center gap-2 text-sm">
-              <Users className="text-muted-foreground h-4 w-4" />
+              <Users className="text-brand-accent/50 h-4 w-4" />
               <span>
                 {session.spotsLeft} of {session.capacity} spots left
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="text-muted-foreground h-4 w-4" />
+              <Clock className="text-brand-accent/50 h-4 w-4" />
               <span>
                 {session.startTime} – {session.endTime}
               </span>
             </div>
           </div>
-        </div>
+        </PublicDialogBody>
 
-        <DialogFooter>
+        <PublicDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
           {!authSession?.user ? (
             <>
               <SignInDialog>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">
                   Sign In
                 </Button>
               </SignInDialog>
@@ -102,8 +104,8 @@ export function SessionDetailsDialog({ session, open, onOpenChange, onJoinSessio
               <a href="/public">View Memberships</a>
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
+        </PublicDialogFooter>
+      </PublicDialogContent>
     </Dialog>
   );
 }
