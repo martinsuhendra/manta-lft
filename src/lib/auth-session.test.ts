@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   DASHBOARD_HOME_PATH,
   PUBLIC_HOME_PATH,
+  buildAuthContinueUrl,
   getPostAuthRedirectPath,
   normalizeDashboardCallbackPath,
 } from "@/lib/auth-session";
@@ -33,5 +34,17 @@ describe("getPostAuthRedirectPath", () => {
   it("ignores unsafe callback URLs for admin roles", () => {
     expect(getPostAuthRedirectPath(USER_ROLES.ADMIN, "https://evil.test")).toBe(DASHBOARD_HOME_PATH);
     expect(getPostAuthRedirectPath(USER_ROLES.ADMIN, "/public")).toBe(DASHBOARD_HOME_PATH);
+  });
+});
+
+describe("buildAuthContinueUrl", () => {
+  it("returns base path when callbackUrl is missing or unsafe", () => {
+    expect(buildAuthContinueUrl()).toBe("/auth/continue");
+    expect(buildAuthContinueUrl(null)).toBe("/auth/continue");
+    expect(buildAuthContinueUrl("https://evil.test")).toBe("/auth/continue");
+  });
+
+  it("encodes safe internal callback URLs", () => {
+    expect(buildAuthContinueUrl("/dashboard/users")).toBe("/auth/continue?callbackUrl=%2Fdashboard%2Fusers");
   });
 });

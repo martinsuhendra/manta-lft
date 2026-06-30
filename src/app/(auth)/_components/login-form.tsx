@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
+import { redirectToAuthContinue } from "@/lib/auth-session";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -54,9 +54,7 @@ export function LoginForm() {
         });
       } else if (result?.ok) {
         toast.success("Successfully signed in!");
-        const session = await waitForAuthenticatedSession();
-        const redirectPath = getPostAuthRedirectPath(session?.user.role, callbackUrl);
-        window.location.assign(redirectPath);
+        redirectToAuthContinue(callbackUrl);
       }
     } catch {
       toast.error("Something went wrong", {

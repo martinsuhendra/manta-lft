@@ -13,7 +13,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
+import { redirectToAuthContinue } from "@/lib/auth-session";
 
 import {
   Dialog,
@@ -75,8 +75,7 @@ export function SignInDialog({
         toast.success("Successfully signed in!");
         setIsOpen(false);
         form.reset();
-        const session = await waitForAuthenticatedSession();
-        window.location.assign(getPostAuthRedirectPath(session?.user.role));
+        redirectToAuthContinue();
       }
     } catch {
       toast.error("Something went wrong", {

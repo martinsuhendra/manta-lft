@@ -33,11 +33,8 @@ const footerSupportLinks = [
 ];
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  const cookieStore = await cookies();
+  const [session, cookieStore, activeBrands] = await Promise.all([auth(), cookies(), getActiveBrands()]);
   const cookieBrandId = cookieStore.get("active_brand_id")?.value;
-
-  const activeBrands = await getActiveBrands();
 
   let brands = activeBrands;
   if (session?.user.id && ![USER_ROLES.SUPERADMIN, USER_ROLES.DEVELOPER].includes(session.user.role)) {

@@ -1,12 +1,4 @@
-import type { Session } from "next-auth";
-import { getSession } from "next-auth/react";
-
 import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
-
-interface WaitForSessionOptions {
-  maxAttempts?: number;
-  delayMs?: number;
-}
 
 export const DASHBOARD_HOME_PATH = "/dashboard/home";
 export const PUBLIC_HOME_PATH = "/public";
@@ -25,6 +17,15 @@ export function normalizeDashboardCallbackPath(path: string): string {
   return path;
 }
 
+export function buildAuthContinueUrl(callbackUrl?: string | null): string {
+  if (!isSafeInternalPath(callbackUrl)) return "/auth/continue";
+  return `/auth/continue?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+}
+
+export function redirectToAuthContinue(callbackUrl?: string | null): void {
+  window.location.assign(buildAuthContinueUrl(callbackUrl));
+}
+
 export function getPostAuthRedirectPath(role: string | undefined, callbackUrl?: string | null) {
   const shouldUseDashboard = shouldRedirectToDashboardAfterAuth(role);
 
@@ -37,19 +38,4 @@ export function getPostAuthRedirectPath(role: string | undefined, callbackUrl?: 
   }
 
   return DASHBOARD_HOME_PATH;
-}
-
-export async function waitForAuthenticatedSession(options: WaitForSessionOptions = {}): Promise<Session | null> {
-  const { maxAttempts = 15, delayMs = 50 } = options;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const session = await getSession();
-    if (session?.user.role) return session;
-
-    if (attempt < maxAttempts - 1) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
-
-  return getSession();
 }

@@ -7,8 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { APP_CONFIG } from "@/config/app-config";
 import { cn } from "@/lib/utils";
 
-const HERO_VISUAL_IMAGE =
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=75&w=1200";
+const HERO_VISUAL_IMAGE = "/images/hero-visual.jpg";
 
 export function LandingHero() {
   return (
