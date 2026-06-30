@@ -3,6 +3,8 @@ import { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { Providers } from "@/components/providers";
 import { APP_CONFIG } from "@/config/app-config";
 
@@ -42,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           }}
         />
         <Providers>{children}</Providers>
+        <SpeedInsights />
       </body>
     </html>
   );

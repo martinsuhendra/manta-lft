@@ -45,6 +45,7 @@
     "@tiptap/pm": "^3.4.4",
     "@tiptap/react": "^3.4.4",
     "@tiptap/starter-kit": "^3.4.4",
+    "@vercel/speed-insights": "^2.0.0",
     "axios": "^1.11.0",
     "bcrypt-ts-edge": "latest",
     "bcryptjs": "latest",
