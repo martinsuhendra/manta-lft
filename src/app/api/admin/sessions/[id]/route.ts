@@ -299,9 +299,10 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
       for (const booking of bookings) {
         if (!doesBookingStatusConsumeQuota(booking.status)) continue;
-        const productItem = booking.membership.product.productItems[0];
+        const productItem = booking.membership.product.productItems.at(0);
         if (!productItem) {
-          throw new Error(`Cannot refund quota: missing product item mapping for booking ${booking.id}`);
+          skippedRefunds += 1;
+          continue;
         }
         await restoreQuota({
           tx,

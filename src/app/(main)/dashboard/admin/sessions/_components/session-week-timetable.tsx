@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 
-import { SESSION_STATUS_COLORS, SESSION_STATUS_LABELS, type Session } from "./schema";
+import { getSessionStatusColor, getSessionStatusLabel, type Session } from "./schema";
 import { buildTimetableLayout, minutesToPx, minutesToTimeString } from "./session-timetable-utils";
 import { TimetableSessionEventMenu } from "./timetable-session-event-menu";
 
@@ -40,13 +40,14 @@ function snapMinutesToStep(totalMinutes: number, step: number): number {
 }
 
 function groupSessionsByDayKey(sessions: Session[]) {
-  return sessions.reduce<Record<string, Session[]>>((acc, session) => {
+  const grouped = new Map<string, Session[]>();
+  for (const session of sessions) {
     const dayKey = format(new Date(session.date), "yyyy-MM-dd");
-    const current = acc[dayKey] ?? [];
+    const current = grouped.get(dayKey) ?? [];
     current.push(session);
-    acc[dayKey] = current;
-    return acc;
-  }, {});
+    grouped.set(dayKey, current);
+  }
+  return grouped;
 }
 
 function formatHoverTime(totalMinutes: number): string {
@@ -69,7 +70,8 @@ export function SessionWeekTimetable({
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const laneHeightPx = minutesToPx(MINUTES_PER_DAY, PX_PER_MINUTE);
   const dayGridScrollRef = React.useRef<HTMLDivElement>(null);
-  const [hoverByDay, setHoverByDay] = React.useState<Record<string, number | null>>({});
+  const [hoverByDay, setHoverByDay] = React.useState<Map<string, number | null>>(() => new Map());
+  const weekStartKey = format(weekStart, "yyyy-MM-dd");
 
   const sessionsByDayKey = React.useMemo(() => groupSessionsByDayKey(sessions), [sessions]);
 
@@ -78,7 +80,7 @@ export function SessionWeekTimetable({
     const el = dayGridScrollRef.current;
     if (!el) return;
     el.scrollTop = INITIAL_SCROLL_HOUR * PX_PER_HOUR;
-  }, [isLoading, format(weekStart, "yyyy-MM-dd")]);
+  }, [isLoading, weekStartKey]);
 
   const summaryLabel = `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`;
 
@@ -144,9 +146,9 @@ export function SessionWeekTimetable({
             <div className="grid grid-cols-7">
               {days.map((day) => {
                 const dayKey = format(day, "yyyy-MM-dd");
-                const daySessions = sessionsByDayKey[dayKey] ?? [];
+                const daySessions = sessionsByDayKey.get(dayKey) ?? [];
                 const layout = buildTimetableLayout(daySessions);
-                const hoverMinutes = hoverByDay[dayKey] ?? null;
+                const hoverMinutes = hoverByDay.get(dayKey) ?? null;
                 const hoverTop = hoverMinutes === null ? null : minutesToPx(hoverMinutes, PX_PER_MINUTE);
                 const hoverLabel = hoverMinutes === null ? null : formatHoverTime(hoverMinutes);
                 const shouldShowHoverLane = daySessions.length === 0;
@@ -162,7 +164,14 @@ export function SessionWeekTimetable({
                         : (event) => {
                             const rect = event.currentTarget.getBoundingClientRect();
                             const y = event.clientY - rect.top;
-                            if (y < 0 || y > rect.height) return setHoverByDay((prev) => ({ ...prev, [dayKey]: null }));
+                            if (y < 0 || y > rect.height) {
+                              setHoverByDay((prev) => {
+                                const next = new Map(prev);
+                                next.set(dayKey, null);
+                                return next;
+                              });
+                              return;
+                            }
                             const rawMinutes = y / PX_PER_MINUTE;
                             const maxSnapped =
                               Math.floor((MINUTES_PER_DAY - 1) / HOVER_SNAP_MINUTES) * HOVER_SNAP_MINUTES;
@@ -173,10 +182,23 @@ export function SessionWeekTimetable({
                               ),
                               maxSnapped,
                             );
-                            setHoverByDay((prev) => ({ ...prev, [dayKey]: snapped }));
+                            setHoverByDay((prev) => {
+                              const next = new Map(prev);
+                              next.set(dayKey, snapped);
+                              return next;
+                            });
                           }
                     }
-                    onMouseLeave={readOnly ? undefined : () => setHoverByDay((prev) => ({ ...prev, [dayKey]: null }))}
+                    onMouseLeave={
+                      readOnly
+                        ? undefined
+                        : () =>
+                            setHoverByDay((prev) => {
+                              const next = new Map(prev);
+                              next.set(dayKey, null);
+                              return next;
+                            })
+                    }
                     onClick={
                       readOnly
                         ? undefined
@@ -220,6 +242,9 @@ export function SessionWeekTimetable({
                       const leftPct = eventLayout.columnCount <= 1 ? 0 : eventLayout.column * widthPct;
                       const participantCount =
                         eventLayout.session.totalParticipantSlots ?? eventLayout.session._count?.bookings ?? 0;
+
+                      const statusColor = getSessionStatusColor(eventLayout.session.status);
+                      const statusLabel = getSessionStatusLabel(eventLayout.session.status);
 
                       return (
                         <div
@@ -281,12 +306,12 @@ export function SessionWeekTimetable({
                                 variant="secondary"
                                 className="px-1.5 py-0 text-[10px] leading-none"
                                 style={{
-                                  backgroundColor: `${SESSION_STATUS_COLORS[eventLayout.session.status]}15`,
-                                  color: SESSION_STATUS_COLORS[eventLayout.session.status],
-                                  border: `1px solid ${SESSION_STATUS_COLORS[eventLayout.session.status]}30`,
+                                  backgroundColor: `${statusColor}15`,
+                                  color: statusColor,
+                                  border: `1px solid ${statusColor}30`,
                                 }}
                               >
-                                {SESSION_STATUS_LABELS[eventLayout.session.status]}
+                                {statusLabel}
                               </StatusBadge>
                               <span className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />

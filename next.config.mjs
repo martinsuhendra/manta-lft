@@ -6,6 +6,9 @@ const projectDirectory = path.dirname(fileURLToPath(import.meta.url))
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: projectDirectory,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "radix-ui", "recharts", "date-fns"],
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

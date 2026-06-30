@@ -12,17 +12,19 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+
+import {
+  Dialog,
+  DialogTrigger,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "./public-dialog";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -89,65 +91,67 @@ export function SignInDialog({
   const dialogContent = (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {children != null ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Sign in to your account</DialogTitle>
-          <DialogDescription>Enter your credentials to access your account.</DialogDescription>
-        </DialogHeader>
+      <PublicDialogContent>
+        <PublicDialogHeader>
+          <PublicDialogTitle>Sign in to your account</PublicDialogTitle>
+          <PublicDialogDescription>Enter your credentials to access your account.</PublicDialogDescription>
+        </PublicDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Address</FormLabel>
-                  <FormControl>
-                    <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="text-center">
-              <Link
-                href="/forgot-password"
-                className="muted-foreground hover:text-primary text-sm"
-                onClick={() => setIsOpen(false)}
-              >
-                Forgot your password?
-              </Link>
-            </div>
-            <DialogFooter>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <PublicDialogBody className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="text-center">
+                <Link
+                  href="/forgot-password"
+                  className="text-brand-primary hover:text-brand-primary/80 text-sm"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            </PublicDialogBody>
+            <PublicDialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
-            </DialogFooter>
+            </PublicDialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </PublicDialogContent>
     </Dialog>
   );
 

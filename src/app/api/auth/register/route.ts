@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+import { validateRegistrationWaiver } from "@/lib/auth/register-waiver";
 import { emailService } from "@/lib/email/service";
 import { createSignupWelcomeTemplate } from "@/lib/email/templates";
 import { prisma } from "@/lib/generated/prisma";
@@ -33,17 +34,11 @@ export async function POST(request: Request) {
       acceptWaiver,
     } = registerBodySchema.parse(body);
     const waiver = await getWaiverSettings();
-
-    if (waiver.isActive) {
-      if (!acceptWaiver) {
-        return NextResponse.json({ error: "You must agree to the waiver" }, { status: 400 });
-      }
-      if (waiverVersion !== waiver.version) {
-        return NextResponse.json({ error: "Waiver has changed. Please refresh and try again." }, { status: 409 });
-      }
+    const waiverError = validateRegistrationWaiver(waiver, { acceptWaiver, waiverVersion });
+    if (waiverError) {
+      return NextResponse.json({ error: waiverError.error }, { status: waiverError.status });
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });

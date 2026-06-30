@@ -68,7 +68,7 @@ export function useDeleteBrand() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      if (!id?.trim()) throw new Error("Brand id is required");
+      if (!id.trim()) throw new Error("Brand id is required");
       await axios.delete(`/api/admin/brands/${encodeURIComponent(id)}`);
     },
     onSuccess: () => {

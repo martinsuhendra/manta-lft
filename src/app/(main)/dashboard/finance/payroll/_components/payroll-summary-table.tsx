@@ -128,7 +128,7 @@ function BreakdownByClassDialog({ row }: { row: PayrollSummaryRow }) {
                   <p className="text-muted-foreground mt-0.5 text-xs leading-snug">
                     {b.sessionsCount} session{b.sessionsCount !== 1 ? "s" : ""}
                     <span className="text-border mx-1.5">·</span>
-                    {formatSessionDateRange(b.sessionDates ?? [])}
+                    {formatSessionDateRange(b.sessionDates)}
                   </p>
                 </div>
                 <p className="text-foreground shrink-0 text-sm font-semibold tabular-nums">{formatPrice(b.totalFee)}</p>

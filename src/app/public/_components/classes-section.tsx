@@ -29,21 +29,24 @@ export function ClassesSection({ classes }: ClassesSectionProps) {
   };
 
   return (
-    <SectionWithPattern id="classes" className="border-border bg-card/30 relative border-y py-24">
+    <SectionWithPattern
+      id="classes"
+      className="border-border/30 bg-brand-accent sporty-section-fill relative border-y py-24"
+    >
       <div className="relative mx-auto max-w-7xl px-4">
         <div className="mb-10 flex flex-col gap-4 sm:mb-16 sm:gap-6 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <h2 className="text-foreground mb-3 text-2xl font-black tracking-tighter uppercase italic sm:mb-4 sm:text-3xl md:text-5xl">
-              Specialized <span className="text-primary">Disciplines</span>
+            <h2 className="mb-3 text-2xl font-black tracking-tighter text-white uppercase italic sm:mb-4 sm:text-3xl md:text-5xl">
+              Specialized <span className="text-brand-primary">Disciplines</span>
             </h2>
-            <p className="text-muted-foreground max-w-xl text-sm sm:text-base">
+            <p className="max-w-xl text-sm text-white/75 sm:text-base">
               Whether you&apos;re looking for the explosive variety of CrossFit or the endurance-focused challenge of
               HYROX, our specialized classes are designed for every fitness level.
             </p>
           </div>
           <Button
             variant="ghost"
-            className="text-primary gap-2 font-bold tracking-widest uppercase hover:gap-3"
+            className="text-brand-primary hover:text-brand-primary gap-2 font-bold tracking-widest uppercase hover:gap-3 hover:bg-white/10"
             asChild
           >
             <Link href="/public/book">

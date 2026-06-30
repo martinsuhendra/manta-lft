@@ -17,7 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { SESSION_STATUS_LABELS } from "./schema";
+import { getSessionStatusLabel } from "./schema";
 
 type SessionStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
 
@@ -58,7 +58,7 @@ export function BulkUpdateStatusDialog({ open, onOpenChange, sessionIds, onSucce
         throw new Error(data.error ?? "Failed to update session status");
       }
 
-      const statusLabel = SESSION_STATUS_LABELS[status];
+      const statusLabel = getSessionStatusLabel(status);
       toast.success(`Updated ${sessionIds.length} session(s) to ${statusLabel}`);
       onOpenChange(false);
       onSuccess?.();
@@ -86,9 +86,9 @@ export function BulkUpdateStatusDialog({ open, onOpenChange, sessionIds, onSucce
               <SelectValue placeholder="Select session status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="SCHEDULED">{SESSION_STATUS_LABELS.SCHEDULED}</SelectItem>
-              <SelectItem value="CANCELLED">{SESSION_STATUS_LABELS.CANCELLED}</SelectItem>
-              <SelectItem value="COMPLETED">{SESSION_STATUS_LABELS.COMPLETED}</SelectItem>
+              <SelectItem value="SCHEDULED">{getSessionStatusLabel("SCHEDULED")}</SelectItem>
+              <SelectItem value="CANCELLED">{getSessionStatusLabel("CANCELLED")}</SelectItem>
+              <SelectItem value="COMPLETED">{getSessionStatusLabel("COMPLETED")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

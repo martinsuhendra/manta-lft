@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
+import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
 import { signUpFormSchema } from "@/lib/validators";
 
 interface PublicWaiverResponse {
@@ -119,12 +119,8 @@ export function RegisterForm() {
         toast.success("Account created successfully!", {
           description: "Welcome! You have been automatically signed in.",
         });
-        // Wait a bit for session to be available, then get it to check user role
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const session = await getSession();
-        const role = session?.user.role;
-        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/public";
-        router.push(redirectPath);
+        const session = await waitForAuthenticatedSession();
+        router.push(getPostAuthRedirectPath(session?.user.role));
         router.refresh();
       }
     } catch {

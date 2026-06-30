@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
+import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -53,12 +53,8 @@ export function LoginForm() {
         });
       } else if (result?.ok) {
         toast.success("Successfully signed in!");
-        // Wait a bit for session to be available, then get it to check user role
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const session = await getSession();
-        const role = session?.user.role;
-        const redirectPath = shouldRedirectToDashboardAfterAuth(role) ? "/dashboard/home" : "/public";
-        router.push(redirectPath);
+        const session = await waitForAuthenticatedSession();
+        router.push(getPostAuthRedirectPath(session?.user.role));
         router.refresh();
       }
     } catch {

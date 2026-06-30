@@ -13,18 +13,20 @@ import {
   type RequestFreezeForm,
 } from "@/app/(main)/dashboard/admin/freeze-requests/_components/freeze-requests-schema";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FREEZE_REASON, FREEZE_REASON_LABELS } from "@/lib/constants/freeze";
+
+import {
+  Dialog,
+  PublicDialogBody,
+  PublicDialogContent,
+  PublicDialogDescription,
+  PublicDialogFooter,
+  PublicDialogHeader,
+  PublicDialogTitle,
+} from "../../_components/public-dialog";
 
 interface RequestFreezeDialogProps {
   open: boolean;
@@ -84,65 +86,67 @@ export function RequestFreezeDialog({ open, onOpenChange, membershipId, productN
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Request Membership Freeze</DialogTitle>
-          <DialogDescription>
+      <PublicDialogContent>
+        <PublicDialogHeader>
+          <PublicDialogTitle>Request Membership Freeze</PublicDialogTitle>
+          <PublicDialogDescription>
             Request a temporary freeze for your {productName} membership. You can choose medical or personal reasons. An
             admin will review and approve your request.
-          </DialogDescription>
-        </DialogHeader>
+          </PublicDialogDescription>
+        </PublicDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <PublicDialogBody className="space-y-4">
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select reason" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={FREEZE_REASON.MEDICAL}>
+                          {FREEZE_REASON_LABELS[FREEZE_REASON.MEDICAL]}
+                        </SelectItem>
+                        <SelectItem value={FREEZE_REASON.PERSONAL}>
+                          {FREEZE_REASON_LABELS[FREEZE_REASON.PERSONAL]}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="reasonDetails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Details (optional)</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select reason" />
-                      </SelectTrigger>
+                      <Textarea placeholder="Provide any additional context..." className="min-h-[80px]" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value={FREEZE_REASON.MEDICAL}>
-                        {FREEZE_REASON_LABELS[FREEZE_REASON.MEDICAL]}
-                      </SelectItem>
-                      <SelectItem value={FREEZE_REASON.PERSONAL}>
-                        {FREEZE_REASON_LABELS[FREEZE_REASON.PERSONAL]}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="reasonDetails"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details (optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Provide any additional context..." className="min-h-[80px]" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </PublicDialogBody>
+            <PublicDialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Submitting..." : "Submit Request"}
               </Button>
-            </DialogFooter>
+            </PublicDialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </PublicDialogContent>
     </Dialog>
   );
 }

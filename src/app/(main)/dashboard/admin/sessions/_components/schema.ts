@@ -145,6 +145,30 @@ export const SESSION_STATUS_COLORS = {
   COMPLETED: "#10B981", // Green
 } as const;
 
+export type SessionStatusKey = keyof typeof SESSION_STATUS_LABELS;
+
+export function getSessionStatusLabel(status: SessionStatusKey): string {
+  switch (status) {
+    case "SCHEDULED":
+      return SESSION_STATUS_LABELS.SCHEDULED;
+    case "CANCELLED":
+      return SESSION_STATUS_LABELS.CANCELLED;
+    case "COMPLETED":
+      return SESSION_STATUS_LABELS.COMPLETED;
+  }
+}
+
+export function getSessionStatusColor(status: SessionStatusKey): string {
+  switch (status) {
+    case "SCHEDULED":
+      return SESSION_STATUS_COLORS.SCHEDULED;
+    case "CANCELLED":
+      return SESSION_STATUS_COLORS.CANCELLED;
+    case "COMPLETED":
+      return SESSION_STATUS_COLORS.COMPLETED;
+  }
+}
+
 export const SESSION_VISIBILITY_LABELS = {
   PUBLIC: "Public",
   PRIVATE: "Private",

@@ -21,8 +21,9 @@ import {
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useMemberDetailsBase, useMemberDetailsSection, type MemberDetailsSection } from "@/hooks/use-member-details";
+import { useMemberDetailsBase, useMemberDetailsSection } from "@/hooks/use-member-details";
 import { useCreateUser, useUpdateUser, useDeleteUser } from "@/hooks/use-users-query";
+import { resolveMemberDetailsSection } from "@/lib/member-details-section";
 import { canActorEditUserRoles } from "@/lib/rbac";
 import { USER_ROLES, USER_ROLE_LABELS, getRoleVariant } from "@/lib/types";
 
@@ -144,7 +145,6 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
   const deleteUser = useDeleteUser();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("overview");
-  const [isEditModeReady, setIsEditModeReady] = React.useState(false);
 
   const currentUserRole = session?.user.role;
   const canEditRoles = canActorEditUserRoles(currentUserRole);
@@ -152,15 +152,7 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
 
   const isViewMode = mode === "view" && !!member?.id && open;
 
-  const sectionByTab: Record<string, MemberDetailsSection | null> = {
-    overview: null,
-    sessions: "classSessions",
-    memberships: "memberships",
-    transactions: "transactions",
-    attendance: "bookings",
-  };
-
-  const activeSection = sectionByTab[activeTab] ?? null;
+  const activeSection = resolveMemberDetailsSection(activeTab);
 
   const { data: memberBase, isLoading: isLoadingBase } = useMemberDetailsBase(member?.id, isViewMode);
 
@@ -186,7 +178,7 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
   const isLoadingDetails = isLoadingBase || (activeSection !== null && activeTab !== "overview" && isLoadingSection);
 
   // Hydrate edit form from canonical user row (birthday, teacher profile, etc.)
-  const { data: userForEdit } = useQuery<UserEditRecord>({
+  const { data: userForEdit, isLoading: isLoadingUserForEdit } = useQuery<UserEditRecord>({
     queryKey: ["user-edit", member?.id],
     queryFn: async () => {
       if (!member?.id) throw new Error("Member ID is required");
@@ -194,7 +186,8 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
       if (!response.ok) throw new Error("Failed to fetch user");
       return response.json();
     },
-    enabled: open && mode === "edit" && !!member?.id,
+    enabled: open && !!member?.id,
+    staleTime: 1000 * 60,
   });
 
   const memberForForm = React.useMemo((): Member | null => {
@@ -227,20 +220,6 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
       setActiveTab("overview");
     }
   }, [open, mode]);
-
-  // Prevent auto-submission when switching to edit mode
-  React.useEffect(() => {
-    if (mode === "edit") {
-      setIsEditModeReady(false);
-      // Enable form submission after a short delay
-      const timer = setTimeout(() => {
-        setIsEditModeReady(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    } else {
-      setIsEditModeReady(true);
-    }
-  }, [mode]);
 
   const handleSubmit = (data: FormData) => {
     if (mode === "add") {
@@ -353,14 +332,19 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
                 </Tabs>
               )
             ) : mode === "edit" || mode === "add" ? (
-              <MemberForm
-                mode={mode}
-                member={mode === "edit" ? memberForForm : member}
-                actorRole={currentUserRole}
-                canEditRoles={canEditRoles}
-                onSubmit={handleSubmit}
-                isPending={createUser.isPending || updateUser.isPending}
-              />
+              mode === "edit" && isLoadingUserForEdit ? (
+                <LoadingSpinner />
+              ) : (
+                <MemberForm
+                  key={mode === "edit" ? `edit-${member?.id}` : "add"}
+                  mode={mode}
+                  member={mode === "edit" ? memberForForm : member}
+                  actorRole={currentUserRole}
+                  canEditRoles={canEditRoles}
+                  onSubmit={handleSubmit}
+                  isPending={createUser.isPending || updateUser.isPending}
+                />
+              )
             ) : null}
           </div>
 
@@ -368,7 +352,7 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
             <DrawerFooterButtons
               mode={mode}
               canDelete={canDelete}
-              isPending={createUser.isPending || updateUser.isPending || (mode === "edit" && !isEditModeReady)}
+              isPending={createUser.isPending || updateUser.isPending}
               onEdit={() => onModeChange("edit")}
               onDelete={() => setDeleteDialogOpen(true)}
             />

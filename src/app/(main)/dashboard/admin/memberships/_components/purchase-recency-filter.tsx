@@ -3,23 +3,20 @@
 import * as React from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { format, isValid, parse } from "date-fns";
-import { CalendarIcon, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+import { PurchaseRecencyFilterFields } from "./purchase-recency-filter-fields";
 
 export type PurchaseRecencyFilterValue = "all" | "7d" | "1m" | "3m" | "1y";
 
@@ -65,11 +62,6 @@ export function PurchaseRecencyFilter({
     enabled: open,
   });
 
-  const fromParsed = draftCreatedFrom ? parse(draftCreatedFrom, "yyyy-MM-dd", new Date()) : undefined;
-  const toParsed = draftCreatedTo ? parse(draftCreatedTo, "yyyy-MM-dd", new Date()) : undefined;
-  const safeFrom = fromParsed && isValid(fromParsed) ? fromParsed : undefined;
-  const safeTo = toParsed && isValid(toParsed) ? toParsed : undefined;
-
   const hasDates = Boolean(createdFrom || createdTo);
   const hasActiveFilter = value !== "all" || hasDates || Boolean(productId);
   const hasDraftDates = Boolean(draftCreatedFrom || draftCreatedTo);
@@ -80,6 +72,13 @@ export function PurchaseRecencyFilter({
     setDraftCreatedFrom(createdFrom);
     setDraftCreatedTo(createdTo);
     setDraftProductId(productId);
+  }
+
+  function clearDraft() {
+    setDraftValue("all");
+    setDraftCreatedFrom("");
+    setDraftCreatedTo("");
+    setDraftProductId("");
   }
 
   return (
@@ -108,140 +107,31 @@ export function PurchaseRecencyFilter({
           <DialogDescription>Filter by created date preset or custom date range.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 pt-1">
-          <Select
-            value={draftProductId || "all"}
-            onValueChange={(next) => setDraftProductId(next === "all" ? "" : next)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by product" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All products</SelectItem>
-              {products.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={draftValue}
-            onValueChange={(v) => {
-              setDraftValue(v as PurchaseRecencyFilterValue);
-              setDraftCreatedFrom("");
-              setDraftCreatedTo("");
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Created within" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any time</SelectItem>
-              <SelectItem value="7d">Created within 7 days</SelectItem>
-              <SelectItem value="1m">Created within 1 month</SelectItem>
-              <SelectItem value="3m">Created within 3 months</SelectItem>
-              <SelectItem value="1y">Created within 1 year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn("justify-start text-left font-normal", !createdFrom && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                  <span className="truncate">{safeFrom ? format(safeFrom, "MMM d, yyyy") : "Start date"}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={safeFrom}
-                  onSelect={(date) => {
-                    const next = date ? format(date, "yyyy-MM-dd") : "";
-                    setDraftValue("all");
-                    setDraftCreatedFrom(next);
-                    if (next && safeTo && date && date > safeTo) setDraftCreatedTo("");
-                  }}
-                  disabled={safeTo ? { after: safeTo } : undefined}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn("justify-start text-left font-normal", !createdTo && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                  <span className="truncate">{safeTo ? format(safeTo, "MMM d, yyyy") : "End date"}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={safeTo}
-                  onSelect={(date) => {
-                    setDraftValue("all");
-                    setDraftCreatedTo(date ? format(date, "yyyy-MM-dd") : "");
-                  }}
-                  disabled={safeFrom ? { before: safeFrom } : undefined}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <DialogFooter className="flex items-center justify-between gap-2 sm:justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={!hasDraftFilter}
-              onClick={() => {
-                setDraftValue("all");
-                setDraftCreatedFrom("");
-                setDraftCreatedTo("");
-                setDraftProductId("");
-              }}
-            >
-              Clear all filters
-            </Button>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  resetDraftFromApplied();
-                  setOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  onChange(draftValue);
-                  onCreatedFromChange(draftCreatedFrom);
-                  onCreatedToChange(draftCreatedTo);
-                  onProductIdChange(draftProductId);
-                  setOpen(false);
-                }}
-                disabled={isProductsLoading}
-              >
-                Apply filters
-              </Button>
-            </div>
-          </DialogFooter>
-        </div>
+        <PurchaseRecencyFilterFields
+          products={products}
+          isProductsLoading={isProductsLoading}
+          draftValue={draftValue}
+          draftCreatedFrom={draftCreatedFrom}
+          draftCreatedTo={draftCreatedTo}
+          draftProductId={draftProductId}
+          hasDraftFilter={hasDraftFilter}
+          onDraftValueChange={setDraftValue}
+          onDraftCreatedFromChange={setDraftCreatedFrom}
+          onDraftCreatedToChange={setDraftCreatedTo}
+          onDraftProductIdChange={setDraftProductId}
+          onClearDraft={clearDraft}
+          onCancel={() => {
+            resetDraftFromApplied();
+            setOpen(false);
+          }}
+          onApply={() => {
+            onChange(draftValue);
+            onCreatedFromChange(draftCreatedFrom);
+            onCreatedToChange(draftCreatedTo);
+            onProductIdChange(draftProductId);
+            setOpen(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

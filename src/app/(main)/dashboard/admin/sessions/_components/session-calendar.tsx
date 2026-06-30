@@ -53,7 +53,6 @@ export function SessionCalendar({
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [viewConfig, setViewConfig] = useState<CalendarViewConfig>({ mode: "week" });
 
-  const dayKey = format(selectedDate, "yyyy-MM-dd");
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: WEEK_STARTS_ON });
   const weekEnd = endOfWeek(selectedDate, { weekStartsOn: WEEK_STARTS_ON });
   const isWeekMode = viewConfig.mode === "week";

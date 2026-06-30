@@ -1,9 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getToken } from "next-auth/jwt";
+import { getToken, type JWT } from "next-auth/jwt";
 
 import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
 import { USER_ROLES } from "@/lib/types";
+
+function applyActiveBrandCookie(response: NextResponse, request: NextRequest, token: JWT, isProtectedRoute: boolean) {
+  if (!isProtectedRoute) return;
+
+  const activeBrandId = request.cookies.get("active_brand_id")?.value;
+  const defaultBrandId = (token as { defaultBrandId?: string }).defaultBrandId;
+  if (!activeBrandId && defaultBrandId && defaultBrandId !== "ALL") {
+    response.cookies.set("active_brand_id", defaultBrandId, { path: "/" });
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { nextUrl } = request;
@@ -37,17 +47,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-  // Expose pathname so root layout can force dark theme for customer (public marketing) pages
   response.headers.set("x-pathname", nextUrl.pathname);
-
-  // On dashboard: only seed cookie from JWT when it is a concrete brand id (not "ALL").
-  // "ALL" + missing cookie are handled in dashboard layout → first accessible brand + client sync.
   if (isLoggedIn && isProtectedRoute) {
-    const activeBrandId = request.cookies.get("active_brand_id")?.value;
-    const defaultBrandId = (token as { defaultBrandId?: string }).defaultBrandId;
-    if (!activeBrandId && defaultBrandId && defaultBrandId !== "ALL") {
-      response.cookies.set("active_brand_id", defaultBrandId, { path: "/" });
-    }
+    applyActiveBrandCookie(response, request, token, true);
   }
 
   return response;

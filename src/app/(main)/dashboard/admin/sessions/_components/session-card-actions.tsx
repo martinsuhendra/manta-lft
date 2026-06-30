@@ -27,7 +27,6 @@ interface SessionCardActionsProps {
 
 export function SessionCardActions({
   session,
-  hasParticipants: _hasParticipants,
   onEdit,
   onAddParticipant,
   onViewParticipants,

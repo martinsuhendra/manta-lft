@@ -30,12 +30,10 @@ interface CompactSessionCardActionsProps {
 
 export function CompactSessionCardActions({
   session,
-  hasParticipants: _hasParticipants,
   onEdit,
   onAddParticipant,
   onViewParticipants,
   onStatusUpdate,
-  onCancelClick: _onCancelClick,
   onDeleteClick,
   onAssignTeacher,
   compact = false,

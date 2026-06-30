@@ -163,7 +163,7 @@ export function ProductFormDialog({
         validDays: product.validDays,
         participantsPerPurchase:
           typeof product.participantsPerPurchase === "number" ? product.participantsPerPurchase : 1,
-        isPurchaseUnlimited: product.isPurchaseUnlimited ?? true,
+        isPurchaseUnlimited: product.isPurchaseUnlimited,
         purchaseLimitPerUser: product.purchaseLimitPerUser ?? null,
         features: product.features,
         image: product.image || "",
