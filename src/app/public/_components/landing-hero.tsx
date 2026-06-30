@@ -1,25 +1,28 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
 
 import { Activity, Flame, MapPin, Timer, Trophy, Users } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { APP_CONFIG } from "@/config/app-config";
+import { cn } from "@/lib/utils";
 
-const HERO_BG_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80";
-const HERO_VISUAL_IMAGE = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80";
+const HERO_BG_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=75&w=1920";
+const HERO_VISUAL_IMAGE =
+  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=75&w=1200";
 
 export function LandingHero() {
   return (
     <div className="relative flex min-h-[85dvh] items-center overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-48 lg:pb-32">
-      {/* Dynamic Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        {/* eslint-disable-next-line @next/next/no-img-element -- hero background from config */}
-        <img
+        <Image
           src={HERO_BG_IMAGE}
-          alt="Crossfit Gym Background"
-          className="h-full w-full object-cover opacity-20 contrast-125 grayscale"
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          className="object-cover opacity-20 contrast-125 grayscale"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--background)] via-[var(--background)]/90 to-[var(--primary)]/10 mix-blend-multiply" />
       </div>
@@ -31,7 +34,7 @@ export function LandingHero() {
               <span className="bg-primary mr-2 flex h-2 w-2 animate-pulse rounded-full" />
               New Hyrox Season Starts Now
             </div>
-            <h1 className="animate-fade-in-up text-foreground text-4xl leading-tight font-black tracking-tighter drop-shadow-2xl sm:text-5xl md:text-7xl md:leading-[0.9]">
+            <h1 className="text-foreground text-4xl leading-tight font-black tracking-tighter drop-shadow-2xl sm:text-5xl md:text-7xl md:leading-[0.9]">
               DIVE INTO <br />
               <span className="from-primary bg-gradient-to-r to-orange-400 bg-clip-text text-transparent">
                 ELITE
@@ -47,9 +50,12 @@ export function LandingHero() {
               <Button asChild size="lg" className="h-12 w-full text-base font-bold tracking-wide uppercase sm:w-auto">
                 <Link href="/public/book">Book a Class</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 w-full text-base sm:w-auto">
-                <Link href="#plans">Start Free Trial</Link>
-              </Button>
+              <Link
+                href="#plans"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-12 w-full text-base sm:w-auto")}
+              >
+                Start Free Trial
+              </Link>
             </div>
 
             <div className="text-muted-foreground animate-fade-in-up flex flex-wrap items-center justify-center gap-8 pt-8 text-sm font-medium delay-300 lg:justify-start">
@@ -65,15 +71,15 @@ export function LandingHero() {
             </div>
           </div>
 
-          {/* Hero Visual */}
           <div className="perspective-1000 relative hidden lg:block lg:w-1/2">
             <div className="hero-visual-card group border-border bg-card shadow-primary/20 relative aspect-video overflow-hidden rounded-2xl border shadow-2xl">
               <div className="absolute inset-0">
-                {/* eslint-disable-next-line @next/next/no-img-element -- hero visual from config */}
-                <img
+                <Image
                   src={HERO_VISUAL_IMAGE}
                   alt="Athlete Training"
-                  className="h-full w-full object-cover opacity-60 transition-opacity duration-700 group-hover:opacity-80"
+                  fill
+                  sizes="(max-width: 1024px) 0vw, 50vw"
+                  className="object-cover opacity-60 transition-opacity duration-700 group-hover:opacity-80"
                 />
               </div>
               <div className="from-background absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-90" />
@@ -91,7 +97,6 @@ export function LandingHero() {
               </div>
             </div>
 
-            {/* Floating Cards */}
             <div className="animate-bounce-slow border-border bg-card/90 absolute -bottom-6 -left-6 flex items-center gap-4 rounded-xl border p-4 shadow-xl backdrop-blur-md">
               <div className="rounded-lg bg-orange-500/20 p-2 text-orange-500">
                 <Flame className="h-6 w-6" />

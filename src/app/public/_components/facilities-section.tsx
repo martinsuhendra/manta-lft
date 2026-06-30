@@ -1,5 +1,3 @@
-"use client";
-
 import { Dumbbell, LayoutGrid, ShowerHead, Timer, Wifi, Wind } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

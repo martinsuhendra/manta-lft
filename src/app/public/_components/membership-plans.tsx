@@ -1,5 +1,3 @@
-"use client";
-
 import { PublicProductCard, type PublicProduct } from "./public-product-card";
 import { SectionWithPattern } from "./section-with-pattern";
 

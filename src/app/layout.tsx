@@ -10,7 +10,12 @@ import { APP_CONFIG } from "@/config/app-config";
 
 import "./globals.css";
 
-const outfit = Outfit({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
+});
 
 export const metadata: Metadata = {
   title: APP_CONFIG.meta.title,

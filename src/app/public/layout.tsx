@@ -8,6 +8,7 @@ import { Clock, Facebook, Instagram, MapPin, Twitter } from "lucide-react";
 import { auth } from "@/auth";
 import { APP_CONFIG } from "@/config/app-config";
 import { prisma } from "@/lib/generated/prisma";
+import { getActiveBrands } from "@/lib/public/shop-brands";
 import { USER_ROLES } from "@/lib/types";
 
 import { ShopBrandProviderWrapper } from "./_components/shop-brand-provider-wrapper";
@@ -36,11 +37,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   const cookieStore = await cookies();
   const cookieBrandId = cookieStore.get("active_brand_id")?.value;
 
-  const activeBrands = await prisma.brand.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true, slug: true, primaryColor: true, accentColor: true, isActive: true },
-    orderBy: { createdAt: "asc" },
-  });
+  const activeBrands = await getActiveBrands();
 
   let brands = activeBrands;
   if (session?.user.id && ![USER_ROLES.SUPERADMIN, USER_ROLES.DEVELOPER].includes(session.user.role)) {
@@ -67,7 +64,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
   return (
     <ShopBrandProviderWrapper initialActiveBrandId={initialActiveBrandId} initialBrands={brands}>
-      <div className="bg-background flex min-h-screen flex-col">
+      <div className="dark bg-background flex min-h-screen flex-col" style={{ colorScheme: "dark" }}>
         <ShopHeaderWrapper session={session} />
         <main className="flex min-h-0 flex-1 flex-col pt-20">{children}</main>
         <div className="h-10 bg-white sm:h-14 md:h-20" aria-hidden />

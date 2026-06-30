@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 
 interface SectionWithPatternProps extends React.HTMLAttributes<HTMLElement> {
