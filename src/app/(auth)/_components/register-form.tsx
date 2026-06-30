@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
+import { redirectToAuthContinue } from "@/lib/auth-session";
 import { signUpFormSchema } from "@/lib/validators";
 
 interface PublicWaiverResponse {
@@ -119,9 +119,7 @@ export function RegisterForm() {
         toast.success("Account created successfully!", {
           description: "Welcome! You have been automatically signed in.",
         });
-        const session = await waitForAuthenticatedSession();
-        router.push(getPostAuthRedirectPath(session?.user.role));
-        router.refresh();
+        redirectToAuthContinue();
       }
     } catch {
       toast.error("Something went wrong", {

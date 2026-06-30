@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
+import { TeacherViewToggle } from "@/components/teacher-view-toggle";
 import { Button } from "@/components/ui/button";
 import { APP_CONFIG } from "@/config/app-config";
 import { cn } from "@/lib/utils";
@@ -16,9 +18,10 @@ import { cn } from "@/lib/utils";
 import { PublicDesktopNav } from "./public-desktop-nav";
 import { PublicMobileMenu } from "./public-mobile-menu";
 import { ShopBrandSwitcher } from "./shop-brand-switcher";
-import { SignInDialog } from "./sign-in-dialog";
 import { SignUpDialog } from "./sign-up-dialog";
 import { useHeaderScrollSpy } from "./use-header-scroll-spy";
+
+const SignInDialog = dynamic(() => import("./sign-in-dialog").then((mod) => mod.SignInDialog), { ssr: false });
 
 interface ShopHeaderProps {
   session: Session | null;
@@ -26,14 +29,9 @@ interface ShopHeaderProps {
 
 export function ShopHeader({ session }: ShopHeaderProps) {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const { activeHash, isScrolled } = useHeaderScrollSpy({ pathname });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/public" });
@@ -68,10 +66,9 @@ export function ShopHeader({ session }: ShopHeaderProps) {
         <PublicDesktopNav pathname={pathname} activeHash={activeHash} />
 
         <nav className="hidden items-center justify-end gap-2 md:flex">
-          {!mounted ? (
-            <div className="bg-muted h-9 w-24 animate-pulse rounded-md" />
-          ) : session ? (
+          {session ? (
             <>
+              <TeacherViewToggle role={session.user.role} appearance="public" />
               <ShopBrandSwitcher />
               <Link href="/public/my-account">
                 <Button
@@ -110,13 +107,12 @@ export function ShopHeader({ session }: ShopHeaderProps) {
           onOpenChange={setIsMobileMenuOpen}
           pathname={pathname}
           activeHash={activeHash}
-          mounted={mounted}
           session={session}
           onSignIn={() => setSignInOpen(true)}
           onSignOut={handleSignOut}
         />
 
-        <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+        {!session ? <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} /> : null}
       </div>
     </header>
   );

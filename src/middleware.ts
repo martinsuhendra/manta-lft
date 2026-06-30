@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getToken, type JWT } from "next-auth/jwt";
 
-import { shouldRedirectToDashboardAfterAuth } from "@/lib/rbac";
+import { getPostAuthRedirectPath } from "@/lib/auth-session";
 import { USER_ROLES } from "@/lib/types";
 
 function applyActiveBrandCookie(response: NextResponse, request: NextRequest, token: JWT, isProtectedRoute: boolean) {
@@ -29,9 +29,10 @@ export async function middleware(request: NextRequest) {
   // Check if the user is trying to access auth pages
   const isAuthPage = nextUrl.pathname.startsWith("/sign-in") || nextUrl.pathname.startsWith("/sign-up");
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages (respect role; never send members to dashboard)
   if (isLoggedIn && isAuthPage) {
-    const redirectPath = shouldRedirectToDashboardAfterAuth(String(token.role)) ? "/dashboard/home" : "/public";
+    const callbackUrl = nextUrl.searchParams.get("callbackUrl");
+    const redirectPath = getPostAuthRedirectPath(String(token.role), callbackUrl);
     return NextResponse.redirect(new URL(redirectPath, nextUrl));
   }
 

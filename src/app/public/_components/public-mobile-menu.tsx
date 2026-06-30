@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 
 import { LogIn, LogOut, Menu, User, UserPlus } from "lucide-react";
 import type { Session } from "next-auth";
 
+import { TeacherViewToggle } from "@/components/teacher-view-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -25,7 +28,6 @@ interface PublicMobileMenuProps {
   onOpenChange: (open: boolean) => void;
   pathname: string;
   activeHash: string;
-  mounted: boolean;
   session: Session | null;
   onSignIn: () => void;
   onSignOut: () => Promise<void>;
@@ -36,7 +38,6 @@ export function PublicMobileMenu({
   onOpenChange,
   pathname,
   activeHash,
-  mounted,
   session,
   onSignIn,
   onSignOut,
@@ -79,8 +80,9 @@ export function PublicMobileMenu({
               ))}
             </nav>
 
-            {mounted && session ? (
+            {session ? (
               <div className="space-y-3">
+                <TeacherViewToggle role={session.user.role} appearance="public" className="w-full justify-center" />
                 <ShopBrandSwitcher mobile />
                 <SheetClose asChild>
                   <Link href="/public/my-account">
@@ -95,12 +97,7 @@ export function PublicMobileMenu({
           </div>
 
           <SheetFooter className="mt-auto">
-            {!mounted ? (
-              <div className="space-y-2">
-                <div className="bg-muted h-9 w-full animate-pulse rounded-md" />
-                <div className="bg-muted h-9 w-full animate-pulse rounded-md" />
-              </div>
-            ) : session ? (
+            {session ? (
               <Button
                 variant="outline"
                 className="text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive w-full"

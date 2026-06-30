@@ -353,7 +353,9 @@ export function MemberDetailDrawer({ member, mode, open, onOpenChange, onModeCha
               mode={mode}
               canDelete={canDelete}
               isPending={createUser.isPending || updateUser.isPending}
-              onEdit={() => onModeChange("edit")}
+              onEdit={() => {
+                queueMicrotask(() => onModeChange("edit"));
+              }}
               onDelete={() => setDeleteDialogOpen(true)}
             />
           )}

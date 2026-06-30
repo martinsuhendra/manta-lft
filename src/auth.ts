@@ -11,6 +11,7 @@ import { getServerSession, type User, type Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 
+import { isDashboardPath } from "@/lib/auth-session";
 import { prisma } from "@/lib/generated/prisma";
 import { signInFormSchema } from "@/lib/validators";
 
@@ -71,11 +72,15 @@ export const authOptions = {
   },
   callbacks: {
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // If url is a relative path, make it absolute
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // If url is on the same origin, allow it
-      else if (new URL(url).origin === baseUrl) return url;
-      // Otherwise redirect to public site (role-based redirect handled in login form)
+      if (url.startsWith("/")) {
+        const pathname = url.split("?")[0];
+        if (isDashboardPath(pathname)) {
+          const params = new URLSearchParams({ callbackUrl: pathname });
+          return `${baseUrl}/auth/continue?${params.toString()}`;
+        }
+        return `${baseUrl}${url}`;
+      }
+      if (new URL(url).origin === baseUrl) return url;
       return `${baseUrl}/public`;
     },
     async jwt({ token, user, trigger }: { token: JWT; user?: User; trigger?: "update" | "signIn" | "signUp" }) {

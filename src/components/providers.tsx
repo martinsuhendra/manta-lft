@@ -17,7 +17,7 @@ function isPublicShopPath(pathname: string | null) {
 
 function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const forcedTheme = isPublicShopPath(pathname) ? "dark" : undefined;
+  const forcedTheme = isPublicShopPath(pathname) ? "light" : undefined;
 
   return (
     <ThemeProvider

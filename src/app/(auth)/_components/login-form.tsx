@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { getPostAuthRedirectPath, waitForAuthenticatedSession } from "@/lib/auth-session";
+import { redirectToAuthContinue } from "@/lib/auth-session";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -26,7 +26,8 @@ const FormSchema = z.object({
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -53,9 +54,7 @@ export function LoginForm() {
         });
       } else if (result?.ok) {
         toast.success("Successfully signed in!");
-        const session = await waitForAuthenticatedSession();
-        router.push(getPostAuthRedirectPath(session?.user.role));
-        router.refresh();
+        redirectToAuthContinue(callbackUrl);
       }
     } catch {
       toast.error("Something went wrong", {

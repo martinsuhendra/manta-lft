@@ -30,7 +30,7 @@ const nextConfig = {
     return [
       {
         source: "/dashboard",
-        destination: "/public",
+        destination: "/dashboard/home",
         permanent: false,
       },
       {

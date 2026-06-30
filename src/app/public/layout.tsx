@@ -33,11 +33,8 @@ const footerSupportLinks = [
 ];
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  const cookieStore = await cookies();
+  const [session, cookieStore, activeBrands] = await Promise.all([auth(), cookies(), getActiveBrands()]);
   const cookieBrandId = cookieStore.get("active_brand_id")?.value;
-
-  const activeBrands = await getActiveBrands();
 
   let brands = activeBrands;
   if (session?.user.id && ![USER_ROLES.SUPERADMIN, USER_ROLES.DEVELOPER].includes(session.user.role)) {
@@ -64,7 +61,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
   return (
     <ShopBrandProviderWrapper initialActiveBrandId={initialActiveBrandId} initialBrands={brands}>
-      <div className="dark bg-background flex min-h-screen flex-col" style={{ colorScheme: "dark" }}>
+      <div className="bg-background flex min-h-screen flex-col" style={{ colorScheme: "light" }}>
         <ShopHeaderWrapper session={session} />
         <main className="flex min-h-0 flex-1 flex-col pt-20">{children}</main>
         <div className="h-10 bg-white sm:h-14 md:h-20" aria-hidden />

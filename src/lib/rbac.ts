@@ -31,7 +31,23 @@ export const RBAC_SUPERADMIN_ASSIGNER_ROLES: readonly string[] = [USER_ROLES.SUP
 export const RBAC_ADMIN_IMMUTABLE_TARGET_ROLES: readonly string[] = [USER_ROLES.SUPERADMIN, USER_ROLES.DEVELOPER];
 
 export function isRbacRoleAllowed(role: string | undefined, allowed: readonly string[]): boolean {
-  return !!role && allowed.includes(role);
+  const normalizedRole = normalizeUserRole(role);
+  return !!normalizedRole && allowed.includes(normalizedRole);
+}
+
+export function normalizeUserRole(role: string | undefined): string | undefined {
+  if (!role) return undefined;
+  const normalized = role.trim().toUpperCase();
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+export function isTeacherRole(role: string | undefined): boolean {
+  return normalizeUserRole(role) === USER_ROLES.TEACHER;
+}
+
+/** Dashboard UI + /dashboard/* routes (ADMIN, SUPERADMIN, DEVELOPER, TEACHER). */
+export function canAccessDashboard(role: string | undefined): boolean {
+  return shouldRedirectToDashboardAfterAuth(role);
 }
 
 export function shouldRedirectToDashboardAfterAuth(role: string | undefined): boolean {

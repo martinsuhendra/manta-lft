@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { Globe } from "lucide-react";
 
 import { APP_CONFIG } from "@/config/app-config";
@@ -13,7 +15,9 @@ export default function LoginPage() {
           <p className="text-muted-foreground text-sm">Please enter your details to login.</p>
         </div>
         <div className="space-y-4">
-          <LoginForm />
+          <Suspense fallback={<div className="text-muted-foreground text-sm">Loading sign in...</div>}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
 

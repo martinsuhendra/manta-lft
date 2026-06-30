@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
@@ -14,6 +13,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { redirectToAuthContinue } from "@/lib/auth-session";
 
 import {
   Dialog,
@@ -49,7 +49,6 @@ export function SignInDialog({
   const setIsOpen = isControlled ? controlledOnOpenChange : setInternalOpen;
 
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -76,8 +75,7 @@ export function SignInDialog({
         toast.success("Successfully signed in!");
         setIsOpen(false);
         form.reset();
-        router.push("/public/my-account");
-        router.refresh();
+        redirectToAuthContinue();
       }
     } catch {
       toast.error("Something went wrong", {

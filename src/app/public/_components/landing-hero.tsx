@@ -7,34 +7,21 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { APP_CONFIG } from "@/config/app-config";
 import { cn } from "@/lib/utils";
 
-const HERO_BG_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=75&w=1920";
-const HERO_VISUAL_IMAGE =
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=75&w=1200";
+const HERO_VISUAL_IMAGE = "/images/hero-visual.jpg";
 
 export function LandingHero() {
   return (
     <div className="relative flex min-h-[85dvh] items-center overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-48 lg:pb-32">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={HERO_BG_IMAGE}
-          alt=""
-          fill
-          priority
-          fetchPriority="high"
-          sizes="100vw"
-          className="object-cover opacity-20 contrast-125 grayscale"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--background)] via-[var(--background)]/90 to-[var(--primary)]/10 mix-blend-multiply" />
-      </div>
+      <div className="hero-wavy-white absolute inset-0 z-0" aria-hidden />
 
       <div className="relative z-10 container mx-auto px-4 text-center lg:text-left">
         <div className="flex flex-col items-center justify-between gap-12 lg:flex-row">
           <div className="space-y-8 lg:w-1/2">
-            <div className="animate-fade-in-up border-primary/30 bg-primary/10 text-primary inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium backdrop-blur-sm">
+            <div className="animate-fade-in-up border-primary/30 bg-primary/10 text-primary inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium">
               <span className="bg-primary mr-2 flex h-2 w-2 animate-pulse rounded-full" />
               New Hyrox Season Starts Now
             </div>
-            <h1 className="text-foreground text-4xl leading-tight font-black tracking-tighter drop-shadow-2xl sm:text-5xl md:text-7xl md:leading-[0.9]">
+            <h1 className="text-brand-accent text-4xl leading-tight font-black tracking-tighter sm:text-5xl md:text-7xl md:leading-[0.9]">
               DIVE INTO <br />
               <span className="from-primary bg-gradient-to-r to-orange-400 bg-clip-text text-transparent">
                 ELITE
@@ -42,7 +29,7 @@ export function LandingHero() {
               <br />
               PERFORMANCE
             </h1>
-            <p className="text-muted-foreground animate-fade-in-up mx-auto max-w-xl text-base leading-relaxed delay-100 sm:text-xl lg:mx-0">
+            <p className="text-brand-accent/70 animate-fade-in-up mx-auto max-w-xl text-base leading-relaxed delay-100 sm:text-xl lg:mx-0">
               The premier facility for Crossfit and Hyrox training. Join the {APP_CONFIG.name} community. Push limits,
               break barriers, and sweat together.
             </p>
@@ -52,13 +39,16 @@ export function LandingHero() {
               </Button>
               <Link
                 href="#plans"
-                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-12 w-full text-base sm:w-auto")}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "border-brand-accent/20 text-brand-accent hover:bg-brand-accent/5 h-12 w-full text-base sm:w-auto",
+                )}
               >
                 Start Free Trial
               </Link>
             </div>
 
-            <div className="text-muted-foreground animate-fade-in-up flex flex-wrap items-center justify-center gap-8 pt-8 text-sm font-medium delay-300 lg:justify-start">
+            <div className="text-brand-accent/65 animate-fade-in-up flex flex-wrap items-center justify-center gap-8 pt-8 text-sm font-medium delay-300 lg:justify-start">
               <span className="flex items-center gap-2">
                 <Users className="h-4 w-4" /> 500+ Members
               </span>
@@ -72,17 +62,17 @@ export function LandingHero() {
           </div>
 
           <div className="perspective-1000 relative hidden lg:block lg:w-1/2">
-            <div className="hero-visual-card group border-border bg-card shadow-primary/20 relative aspect-video overflow-hidden rounded-2xl border shadow-2xl">
+            <div className="hero-visual-card group border-brand-accent/10 shadow-brand-accent/10 relative aspect-video overflow-hidden rounded-2xl border bg-white shadow-2xl">
               <div className="absolute inset-0">
                 <Image
                   src={HERO_VISUAL_IMAGE}
                   alt="Athlete Training"
                   fill
                   sizes="(max-width: 1024px) 0vw, 50vw"
-                  className="object-cover opacity-60 transition-opacity duration-700 group-hover:opacity-80"
+                  className="object-cover opacity-80 transition-opacity duration-700 group-hover:opacity-95"
                 />
               </div>
-              <div className="from-background absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
               <div className="absolute bottom-6 left-6 z-10">
                 <div className="mb-2 flex items-center gap-3">
@@ -91,29 +81,29 @@ export function LandingHero() {
                     {APP_CONFIG.name} Performance
                   </span>
                 </div>
-                <p className="max-w-xs text-sm text-gray-300">
+                <p className="max-w-xs text-sm text-white/85">
                   High intensity functional training for the modern athlete.
                 </p>
               </div>
             </div>
 
-            <div className="animate-bounce-slow border-border bg-card/90 absolute -bottom-6 -left-6 flex items-center gap-4 rounded-xl border p-4 shadow-xl backdrop-blur-md">
+            <div className="animate-bounce-slow border-brand-accent/10 absolute -bottom-6 -left-6 flex items-center gap-4 rounded-xl border bg-white p-4 shadow-xl">
               <div className="rounded-lg bg-orange-500/20 p-2 text-orange-500">
                 <Flame className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-muted-foreground text-xs font-bold uppercase">Calories Burned</p>
-                <p className="text-foreground text-lg font-bold">850 kcal</p>
+                <p className="text-brand-accent/60 text-xs font-bold uppercase">Calories Burned</p>
+                <p className="text-brand-accent text-lg font-bold">850 kcal</p>
               </div>
             </div>
 
-            <div className="border-border bg-card/90 absolute -top-6 -right-6 flex animate-pulse items-center gap-4 rounded-xl border p-4 shadow-xl backdrop-blur-md">
+            <div className="border-brand-accent/10 absolute -top-6 -right-6 flex animate-pulse items-center gap-4 rounded-xl border bg-white p-4 shadow-xl">
               <div className="bg-primary/20 text-primary rounded-lg p-2">
                 <Timer className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-muted-foreground text-xs font-bold uppercase">Time Cap</p>
-                <p className="text-foreground text-lg font-bold">45:00</p>
+                <p className="text-brand-accent/60 text-xs font-bold uppercase">Time Cap</p>
+                <p className="text-brand-accent text-lg font-bold">45:00</p>
               </div>
             </div>
           </div>

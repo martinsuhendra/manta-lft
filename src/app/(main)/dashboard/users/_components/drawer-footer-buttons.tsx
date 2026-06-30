@@ -14,12 +14,29 @@ interface DrawerFooterButtonsProps {
 export function DrawerFooterButtons({ mode, canDelete, isPending, onEdit, onDelete }: DrawerFooterButtonsProps) {
   if (mode === "view") {
     return (
-      <DrawerFooter className="gap-2">
-        <Button variant="outline" onClick={onEdit} className="w-full">
+      <DrawerFooter key="drawer-footer-view" className="gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={(event) => {
+            event.preventDefault();
+            onEdit();
+          }}
+          className="w-full"
+        >
           <Pencil className="mr-2 h-4 w-4" />
           Edit User
         </Button>
-        <Button variant="destructive" onClick={onDelete} disabled={!canDelete} className="w-full">
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={(event) => {
+            event.preventDefault();
+            onDelete();
+          }}
+          disabled={!canDelete}
+          className="w-full"
+        >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete User
         </Button>
@@ -30,7 +47,7 @@ export function DrawerFooterButtons({ mode, canDelete, isPending, onEdit, onDele
   const buttonText = mode === "add" ? "Create User" : "Update User";
 
   return (
-    <DrawerFooter className="gap-2">
+    <DrawerFooter key="drawer-footer-form" className="gap-2">
       <Button type="submit" form="member-form" disabled={isPending} className="flex-1">
         {buttonText}
       </Button>

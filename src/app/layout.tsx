@@ -34,8 +34,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
                   const path = window.location.pathname || ""
                   const isPublicShop = path === "/public" || path.startsWith("/public/")
                   if (isPublicShop) {
-                    document.documentElement.classList.add("dark")
-                    document.documentElement.style.colorScheme = "dark"
+                    document.documentElement.classList.remove("dark")
+                    document.documentElement.classList.add("light")
+                    document.documentElement.style.colorScheme = "light"
                     return
                   }
                   const savedTheme = window.localStorage.getItem("theme")
