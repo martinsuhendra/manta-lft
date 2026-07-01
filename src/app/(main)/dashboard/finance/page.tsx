@@ -1,24 +1,25 @@
-import { AccountOverview } from "./_components/account-overview";
-import { CurrencyExchange } from "./_components/currency-exchange";
-import { ExpenseSummary } from "./_components/expense-summary";
-import { FinancialOverview } from "./_components/financial-overview";
+import { FinanceDashboardHeader } from "./_components/finance-dashboard-header";
+import { FinanceKpiCards } from "./_components/finance-kpi-cards";
+import { FinanceQuickStats } from "./_components/finance-quick-stats";
+import { FinanceRevenueByProduct } from "./_components/finance-revenue-by-product";
+import { FinanceRevenueChart } from "./_components/finance-revenue-chart";
+import { FinanceTransactionsTable } from "./_components/finance-transactions-table";
 
-export default function Page() {
+export default function FinancePage() {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div className="flex flex-col gap-4 lg:col-span-1">
-        <AccountOverview />
-      </div>
-
-      <div className="flex flex-col gap-4 lg:col-span-2">
-        <div className="flex-1">
-          <FinancialOverview />
+    <div className="@container/main flex flex-col gap-4 md:gap-6">
+      <FinanceDashboardHeader />
+      <FinanceKpiCards />
+      <FinanceRevenueChart />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <FinanceRevenueByProduct />
         </div>
-        <div className="grid flex-1 grid-cols-1 gap-4 *:data-[slot=card]:shadow-xs md:grid-cols-2">
-          <ExpenseSummary />
-          <CurrencyExchange />
+        <div>
+          <FinanceQuickStats />
         </div>
       </div>
+      <FinanceTransactionsTable />
     </div>
   );
 }

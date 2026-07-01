@@ -1,83 +1,106 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { EllipsisVertical } from "lucide-react";
-import z from "zod";
 
+import type { ExpiringMembership, FreezeRequest, LowFillSession } from "@/app/(main)/dashboard/_shared/overview/schema";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-import { recentLeadSchema } from "./schema";
+function FillRateCell({ percent }: { percent: number }) {
+  return (
+    <span className={`text-sm font-medium tabular-nums ${percent < 50 ? "text-yellow-500" : "text-foreground"}`}>
+      {percent}%
+    </span>
+  );
+}
 
-export const recentLeadsColumns: ColumnDef<z.infer<typeof recentLeadSchema>>[] = [
+const freezeStatusVariant: Record<FreezeRequest["status"], "success" | "warning" | "destructive"> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  REJECTED: "destructive",
+};
+
+export const expiringMembershipColumns: ColumnDef<ExpiringMembership>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
+    accessorKey: "member",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
+    cell: ({ row }) => <span className="block max-w-[7rem] truncate font-medium">{row.original.member}</span>,
+  },
+  {
+    accessorKey: "product",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Product" />,
     cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
+      <span className="text-muted-foreground block max-w-[8rem] truncate text-xs @[22rem]/card:max-w-none @[22rem]/card:text-sm">
+        {row.original.product}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "expiresAt",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Expires" />,
+    cell: ({ row }) => (
+      <span className="text-xs whitespace-nowrap tabular-nums @[22rem]/card:text-sm">{row.original.expiresAt}</span>
+    ),
+  },
+  {
+    accessorKey: "daysLeft",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Days" />,
+    cell: ({ row }) => (
+      <StatusBadge variant={row.original.daysLeft <= 7 ? "warning" : "secondary"} className="whitespace-nowrap">
+        {row.original.daysLeft}d
+      </StatusBadge>
+    ),
+  },
+];
+
+export const freezeRequestColumns: ColumnDef<FreezeRequest>[] = [
+  {
+    accessorKey: "member",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
+    cell: ({ row }) => <span className="block max-w-[7rem] truncate font-medium">{row.original.member}</span>,
+  },
+  {
+    id: "dates",
+    header: "Period",
+    cell: ({ row }) => (
+      <div className="text-muted-foreground max-w-[9rem] text-xs tabular-nums @[22rem]/card:max-w-none">
+        <span className="block truncate">{row.original.startDate}</span>
+        <span className="block truncate">→ {row.original.endDate}</span>
       </div>
     ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "id",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ref" />,
-    cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>,
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-    cell: ({ row }) => <span>{row.original.name}</span>,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "company",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Company" />,
-    cell: ({ row }) => <span>{row.original.company}</span>,
-    enableSorting: false,
   },
   {
     accessorKey: "status",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => <StatusBadge variant="secondary">{row.original.status}</StatusBadge>,
-    enableSorting: false,
-  },
-  {
-    accessorKey: "source",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Source" />,
-    cell: ({ row }) => <StatusBadge variant="outline">{row.original.source}</StatusBadge>,
-    enableSorting: false,
-  },
-  {
-    accessorKey: "lastActivity",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Activity" />,
-    cell: ({ row }) => <span className="text-muted-foreground tabular-nums">{row.original.lastActivity}</span>,
-    enableSorting: false,
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <Button variant="ghost" className="text-muted-foreground flex size-8" size="icon">
-        <EllipsisVertical />
-        <span className="sr-only">Open menu</span>
-      </Button>
+    cell: ({ row }) => (
+      <StatusBadge variant={freezeStatusVariant[row.original.status]} className="text-xs whitespace-nowrap">
+        {row.original.status}
+      </StatusBadge>
     ),
-    enableSorting: false,
+  },
+];
+
+export const lowFillSessionColumns: ColumnDef<LowFillSession>[] = [
+  {
+    accessorKey: "session",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Session" />,
+    cell: ({ row }) => <span className="block max-w-[8rem] truncate font-medium">{row.original.session}</span>,
+  },
+  {
+    accessorKey: "date",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
+    cell: ({ row }) => (
+      <span className="text-muted-foreground block max-w-[6rem] truncate text-xs whitespace-nowrap @[22rem]/card:max-w-none @[22rem]/card:text-sm">
+        {row.original.date}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "fillPercent",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Fill" />,
+    cell: ({ row }) => <FillRateCell percent={row.original.fillPercent} />,
+  },
+  {
+    accessorKey: "spotsLeft",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Open" />,
+    cell: ({ row }) => <span className="text-xs tabular-nums @[22rem]/card:text-sm">{row.original.spotsLeft}</span>,
   },
 ];

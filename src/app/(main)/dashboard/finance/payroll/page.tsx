@@ -17,7 +17,7 @@ import { RBAC_PAYROLL_MENU_ROLES } from "@/lib/rbac";
 import { USER_ROLES } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 
-import { SectionCardsGrid } from "../../home/_components/section-cards";
+import { SectionCardsGrid } from "../../_shared/overview/section-cards";
 
 import { PayrollFilters, getSummaryQueryParams, type PayrollFiltersState } from "./_components/payroll-filters";
 import { PayrollSummaryTable } from "./_components/payroll-summary-table";
