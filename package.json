@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "email:dev": "email dev",
     "changeset": "changeset",
-    "release": "changeset version",
+    "release": "bash scripts/release.sh",
+    "release:version": "changeset version",
     "release:tag": "changeset tag"
   },
   "lint-staged": {

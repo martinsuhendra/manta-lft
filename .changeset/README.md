@@ -7,8 +7,9 @@ This repo uses [Changesets](https://github.com/changesets/changesets) for versio
 | Command | When to use |
 | ------- | ----------- |
 | `pnpm changeset` | After completing a feature, fix, or breaking change — pick patch/minor/major and write a short summary |
-| `pnpm release` | On `main` when you are ready to ship — bumps `package.json` version and updates `CHANGELOG.md` |
-| `pnpm release:tag` | After the release commit — creates `vX.Y.Z` git tags |
+| `pnpm release` | On `main` with a clean tree — bumps version, updates changelog, commits, tags, and pushes |
+| `pnpm release:version` | Bump only (`changeset version`) — useful for debugging |
+| `pnpm release:tag` | Creates git tags via changesets (monorepo helper; not used by `pnpm release`) |
 
 ## Workflow
 
@@ -26,13 +27,11 @@ pnpm changeset
 
 ```bash
 pnpm release
-git add package.json CHANGELOG.md
-git commit -m "chore: release vX.Y.Z"
-git tag vX.Y.Z
-git push origin main --tags
 ```
 
-Replace `X.Y.Z` with the new version from `package.json`.
+This runs `changeset version`, commits `package.json` + `CHANGELOG.md` as `chore: release vX.Y.Z`, tags `vX.Y.Z`, and pushes `main` with tags.
+
+Requirements: be on `main`, working tree clean, and at least one pending changeset.
 
 ## Version bump guide
 
