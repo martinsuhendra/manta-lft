@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { getHashFromHref, getPathFromHref, waitForSectionAndScroll } from "./public-nav";
+import { getHashFromHref, getPathFromHref } from "./public-nav";
 
 type PublicHashLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
   href: string;
@@ -28,7 +28,6 @@ export function PublicHashLink({ href, onClick, ...props }: PublicHashLinkProps)
 
         if (pathname === normalizedTargetPath) {
           event.preventDefault();
-          waitForSectionAndScroll(hash);
           window.history.pushState(null, "", `${normalizedTargetPath}${hash}`);
           window.dispatchEvent(new HashChangeEvent("hashchange"));
           return;

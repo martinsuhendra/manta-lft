@@ -17,8 +17,7 @@ export function getPathFromHref(href: string) {
 
 export function getHashFromHref(href: string) {
   const [, hash = ""] = href.split("#");
-  if (!hash) return "";
-  return hash.startsWith("#") ? hash : `#${hash}`;
+  return hash ? `#${hash}` : "";
 }
 
 export function waitForSectionAndScroll(hash: string, maxAttempts = 100) {

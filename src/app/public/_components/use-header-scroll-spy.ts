@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { NAV_ITEMS, waitForSectionAndScroll } from "./public-nav";
 
@@ -11,6 +11,7 @@ interface UseHeaderScrollSpyParams {
 export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeHash, setActiveHash] = useState("");
+  const cancelScrollRef = useRef<(() => void) | null>(null);
 
   const trackedSectionHashes = useMemo(
     () =>
@@ -19,6 +20,16 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
         .map((hash) => `#${hash}`),
     [],
   );
+
+  const scrollToHash = useCallback((hash: string) => {
+    cancelScrollRef.current?.();
+    cancelScrollRef.current = waitForSectionAndScroll(hash);
+  }, []);
+
+  const cancelPendingScroll = useCallback(() => {
+    cancelScrollRef.current?.();
+    cancelScrollRef.current = null;
+  }, []);
 
   useEffect(() => {
     setActiveHash(window.location.hash || "");
@@ -34,7 +45,7 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
       const hash = window.location.hash || "";
       setActiveHash(hash);
       if (window.location.pathname === "/public" && hash) {
-        waitForSectionAndScroll(hash);
+        scrollToHash(hash);
       }
     }
 
@@ -45,16 +56,22 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("hashchange", handleHashChange);
+      cancelPendingScroll();
     };
-  }, []);
+  }, [cancelPendingScroll, scrollToHash]);
 
   useEffect(() => {
     const hash = window.location.hash || "";
     setActiveHash(hash);
-    if (pathname !== "/public" || !hash) return;
 
-    return waitForSectionAndScroll(hash);
-  }, [pathname]);
+    if (pathname !== "/public" || !hash) {
+      cancelPendingScroll();
+      return;
+    }
+
+    scrollToHash(hash);
+    return cancelPendingScroll;
+  }, [cancelPendingScroll, pathname, scrollToHash]);
 
   useEffect(() => {
     if (pathname !== "/public") return;
@@ -63,6 +80,9 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
     const trackedIds = trackedSectionHashes.map((hash) => hash.replace("#", ""));
     const intersectionState = new Map<string, number>();
     const observedElements = new Map<string, HTMLElement>();
+    let pollFrame = 0;
+    let pollAttempts = 0;
+    let pollingCancelled = false;
 
     const intersectionObserver = new IntersectionObserver(
       (entries) => {
@@ -108,17 +128,24 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
       }
     }
 
-    syncObservedSections();
+    function pollForSections() {
+      if (pollingCancelled) return;
 
-    // Sections rendered inside Suspense boundaries stream in after this effect
-    // runs, and hydration can replace the streamed DOM nodes, so keep watching
-    // the DOM and re-observe whenever a tracked section's element changes.
-    const mutationObserver = new MutationObserver(syncObservedSections);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
+      syncObservedSections();
+
+      const allSectionsFound = trackedIds.every((id) => observedElements.has(id));
+      if (allSectionsFound || pollAttempts++ >= 120) return;
+
+      pollFrame = requestAnimationFrame(pollForSections);
+    }
+
+    syncObservedSections();
+    pollForSections();
 
     return () => {
+      pollingCancelled = true;
+      cancelAnimationFrame(pollFrame);
       intersectionObserver.disconnect();
-      mutationObserver.disconnect();
     };
   }, [pathname, trackedSectionHashes]);
 

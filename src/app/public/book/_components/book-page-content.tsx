@@ -28,6 +28,9 @@ import { BookingModal } from "./booking-modal";
 const defaultStart = startOfDay(new Date());
 const RANGE_DAYS = 14;
 
+const datePickerButtonClass =
+  "border-border bg-background text-foreground h-10 min-w-[140px] justify-start text-left font-normal shadow-xs sm:w-[180px]";
+
 interface ClassOption {
   id: string;
   name: string;
@@ -237,15 +240,8 @@ export function BookPageContent({ classes, initialItemId }: BookPageContentProps
           </Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                id="start"
-                variant="ghost"
-                className={cn(
-                  "h-10 min-w-[140px] justify-start text-left font-normal sm:w-[180px]",
-                  !startDate && "opacity-90",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-white" />
+              <Button id="start" variant="outline" className={cn(datePickerButtonClass, !startDate && "opacity-90")}>
+                <CalendarIcon className="text-brand-primary mr-2 h-4 w-4 shrink-0" />
                 {startDateObj ? format(startDateObj, "MMM d, yyyy") : "Pick date"}
               </Button>
             </PopoverTrigger>
@@ -265,12 +261,12 @@ export function BookPageContent({ classes, initialItemId }: BookPageContentProps
           </Label>
           <Button
             id="end"
-            variant="ghost"
+            variant="outline"
             disabled
             aria-disabled
-            className="h-10 min-w-[140px] justify-start text-left font-normal disabled:opacity-70 sm:w-[180px]"
+            className={cn(datePickerButtonClass, "disabled:opacity-70")}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-white" />
+            <CalendarIcon className="text-brand-primary mr-2 h-4 w-4 shrink-0" />
             {endDateObj ? format(endDateObj, "MMM d, yyyy") : "—"}
           </Button>
         </div>
