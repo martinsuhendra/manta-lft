@@ -19,7 +19,7 @@ describe("createPaymentSuccessTemplate", () => {
     expect(template.html).toContain("Monthly Unlimited");
     expect(template.html).toContain("https://example.com/public/my-account");
     expect(template.html).toContain("Payment received");
-    expect(template.html).toContain("email-logo.svg");
+    expect(template.html).toContain("manta-logo_e08ti8.jpg");
     expect(template.html).toContain("INV-A1B2C3D4");
     expect(template.html).toContain("PAID");
     expect(template.text).toContain("Alex");

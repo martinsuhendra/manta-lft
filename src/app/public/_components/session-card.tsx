@@ -59,6 +59,7 @@ export function SessionCard({
 }: SessionCardProps) {
   const status = eligibility?.alreadyBooked ? "booked" : eligibility?.canJoin ? "can-join" : "cannot-join";
   const reason = eligibility?.reason;
+  const spotsLeft = eligibility?.spotsLeft ?? session.spotsLeft;
 
   return (
     <Card
@@ -102,9 +103,9 @@ export function SessionCard({
                 )}
                 <span className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  {session.spotsLeft} spots left
+                  {spotsLeft} spots left
                 </span>
-                {session.spotsLeft <= 3 && session.spotsLeft > 0 && (
+                {spotsLeft <= 3 && spotsLeft > 0 && (
                   <span className="text-destructive text-xs font-medium">Almost full</span>
                 )}
               </div>

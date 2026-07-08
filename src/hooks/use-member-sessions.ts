@@ -7,6 +7,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/rea
 import axios from "axios";
 import { toast } from "sonner";
 
+import { getMemberBookingQueryKeys } from "@/lib/member-booking-cache";
 import { useBrandStore } from "@/stores/brand/brand-provider";
 
 export interface MemberSessionFilters {
@@ -182,12 +183,11 @@ export function useMemberBookSession() {
       const { data } = await axios.post(`/api/public/sessions/${sessionId}/book`, { membershipId });
       return data;
     },
-    onSuccess: (_, { sessionId }) => {
-      queryClient.invalidateQueries({ queryKey: ["member-sessions", activeBrandId] });
-      queryClient.invalidateQueries({
-        queryKey: ["session-eligibility", activeBrandId, sessionId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["my-account", activeBrandId] });
+    onSuccess: () => {
+      const keys = getMemberBookingQueryKeys(activeBrandId);
+      void queryClient.refetchQueries({ queryKey: keys.memberSessions });
+      void queryClient.refetchQueries({ queryKey: keys.sessionEligibility });
+      void queryClient.invalidateQueries({ queryKey: keys.myAccount });
       toast.success("You're booked!");
     },
     onError: (err: unknown) => {
@@ -207,9 +207,10 @@ export function useMemberCancelBooking() {
       await axios.delete(`/api/public/bookings/${bookingId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["member-sessions", activeBrandId] });
-      queryClient.invalidateQueries({ queryKey: ["session-eligibility", activeBrandId] });
-      queryClient.invalidateQueries({ queryKey: ["my-account", activeBrandId] });
+      const keys = getMemberBookingQueryKeys(activeBrandId);
+      void queryClient.refetchQueries({ queryKey: keys.memberSessions });
+      void queryClient.refetchQueries({ queryKey: keys.sessionEligibility });
+      void queryClient.invalidateQueries({ queryKey: keys.myAccount });
       toast.success("Booking cancelled");
     },
     onError: (err: unknown) => {
