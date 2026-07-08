@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Activity, Calendar, CreditCard, History, Loader2, LogOut, Settings, User } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Activity, Calendar, Clock, CreditCard, History, Loader2, LogOut, Settings, User } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -178,6 +179,19 @@ function formatDateShort(dateString: string) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatSessionTimeRange(startTime: string, endTime?: string | null) {
+  const formatTime = (timeStr: string) => {
+    const [hours, minutes = "00"] = timeStr.split(":");
+    const h = Number(hours);
+    const period = h < 12 ? "AM" : "PM";
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${minutes.slice(0, 2)} ${period}`;
+  };
+
+  if (!endTime) return formatTime(startTime);
+  return `${formatTime(startTime)} – ${formatTime(endTime)}`;
 }
 
 function SimplePagination({
@@ -608,54 +622,79 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                   {currentAttendance.length === 0 ? (
                     <p className="text-muted-foreground py-4 text-center text-sm">No upcoming sessions.</p>
                   ) : (
-                    currentAttendance.map((item) => (
-                      <div
-                        key={item.id}
-                        className="group border-border bg-background/50 hover:border-primary/30 rounded-xl border p-4 transition-all"
-                      >
-                        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
-                              <Calendar className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="text-foreground font-bold">{item.classSession.item.name}</p>
-                              <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                                <Badge variant="secondary">{item.classSession.item.name}</Badge>
-                                <span>•</span>
-                                <span>{item.classSession.teacher?.name ?? "TBA"}</span>
+                    currentAttendance.map((item) => {
+                      const sessionDate = parseISO(item.classSession.date);
+                      const timeRange = formatSessionTimeRange(item.classSession.startTime, item.classSession.endTime);
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="group border-border bg-card hover:border-primary/25 relative overflow-hidden rounded-xl border transition-all hover:shadow-sm"
+                        >
+                          <div className="bg-primary/40 group-hover:bg-primary absolute top-0 left-0 h-full w-1 transition-colors" />
+                          <div className="flex flex-col gap-4 p-4 pl-5 sm:flex-row sm:items-center sm:gap-0 sm:p-5 sm:pl-6">
+                            <div className="border-border flex min-w-0 items-center gap-3 sm:w-44 sm:shrink-0 sm:border-r sm:pr-5">
+                              <div className="bg-primary/10 text-primary flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg">
+                                <span className="text-[10px] leading-none font-bold tracking-wide uppercase">
+                                  {format(sessionDate, "MMM")}
+                                </span>
+                                <span className="text-xl leading-none font-black">{format(sessionDate, "d")}</span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-foreground text-sm font-bold">{format(sessionDate, "EEEE")}</p>
+                                <p className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
+                                  <Clock className="h-3 w-3 shrink-0" />
+                                  <span>{timeRange}</span>
+                                </p>
                               </div>
                             </div>
-                          </div>
-                          <div className="border-border flex items-center justify-between border-t pt-3 sm:flex-col sm:items-end sm:justify-center sm:border-t-0 sm:pt-0 sm:text-right">
-                            <p className="text-foreground text-sm font-black">
-                              {formatDateShort(item.classSession.date)}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {item.classSession.startTime}
-                              {item.classSession.endTime ? ` – ${item.classSession.endTime}` : ""}
-                            </p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="mt-2 sm:mt-0"
-                              onClick={() =>
-                                cancelBookingMutation.mutate(item.id, {
-                                  onSuccess: () => router.refresh(),
-                                })
-                              }
-                              disabled={cancelBookingMutation.isPending || !item.canCancel}
-                              title={item.canCancel ? undefined : "Cancellation is no longer allowed for this session."}
-                            >
-                              {cancelBookingMutation.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+
+                            <div className="flex min-w-0 flex-1 flex-col justify-center sm:px-5">
+                              <p className="text-foreground text-base font-bold">{item.classSession.item.name}</p>
+                              <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                                <span className="flex items-center gap-1">
+                                  <User className="h-3 w-3 shrink-0" />
+                                  {item.classSession.teacher?.name ?? "TBA"}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] font-semibold tracking-wide uppercase"
+                                >
+                                  {item.membership.product.name}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="border-border flex flex-col items-stretch gap-1.5 sm:w-32 sm:shrink-0 sm:border-l sm:pl-5">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="w-full font-semibold"
+                                onClick={() =>
+                                  cancelBookingMutation.mutate(item.id, {
+                                    onSuccess: () => router.refresh(),
+                                  })
+                                }
+                                disabled={cancelBookingMutation.isPending || !item.canCancel}
+                                title={
+                                  item.canCancel ? undefined : "Cancellation is no longer allowed for this session."
+                                }
+                              >
+                                {cancelBookingMutation.isPending ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                Cancel
+                              </Button>
+                              {!item.canCancel ? (
+                                <p className="text-muted-foreground text-center text-[10px] leading-tight">
+                                  Cancel window closed
+                                </p>
                               ) : null}
-                              Cancel
-                            </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
                 <SimplePagination
