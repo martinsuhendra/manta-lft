@@ -9,27 +9,26 @@ export interface EmailTemplate {
 /** Hosted logo for email clients (absolute URL required; local assets are blocked by many clients). */
 export const EMAIL_LOGO_URL = "https://res.cloudinary.com/dnftsdhv2/image/upload/v1783484393/manta-logo_e08ti8.jpg";
 
-/** Matches `src/styles/presets/manta.css` light theme + logo palette (#EF5F18, #28184A). */
+/** Matches `src/styles/presets/manta.css` + `sporty-section-fill-white` (#EFECEB, #EFE4DE). */
 export const brandColors = {
   primary: "#EF5F18",
   primaryLight: "#F57A3D",
   primaryDark: "#D95412",
   accentPurple: "#28184A",
-  background: "#DFD9E6",
+  background: "#EFECEB",
   foreground: "#28184A",
   text: "#3D3558",
   muted: "#7A738F",
   card: "#FFFFFF",
-  border: "#E8E4EC",
-  accent: "#F0ECF4",
+  border: "#E8E4E0",
+  accent: "#EFE4DE",
 } as const;
 
 export const emailLayout = {
   maxWidth: 560,
   logoUrl: EMAIL_LOGO_URL,
-  logoWidth: 220,
-  logoHeight: 220,
-  headerPadding: "28px 32px 24px",
+  logoWidth: 128,
+  headerPadding: "16px 24px 14px",
 } as const;
 
 export const emailInline = {

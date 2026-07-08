@@ -18,6 +18,7 @@ import {
   useSessionEligibility,
   type MemberSession,
 } from "@/hooks/use-member-sessions";
+import { formatStudioDateTime } from "@/lib/studio-timezone";
 
 import {
   Dialog,
@@ -138,7 +139,7 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
                 {eligibility.canCancel === false
                   ? "Cancellation is no longer allowed for this session."
                   : eligibility.cancelDeadline
-                    ? `You're booked for this class. You can cancel until ${format(new Date(eligibility.cancelDeadline), "PPp")}.`
+                    ? `You're booked for this class. You can cancel until ${formatStudioDateTime(eligibility.cancelDeadline)}.`
                     : "You're booked for this class. You can cancel your booking below."}
               </p>
               <Button

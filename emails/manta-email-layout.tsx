@@ -39,7 +39,6 @@ export function MantaEmailLayout({ preview, children, footerNote }: MantaEmailLa
               src={getEmailLogoUrl()}
               alt={APP_CONFIG.name}
               width={emailLayout.logoWidth}
-              height={emailLayout.logoHeight}
               style={{
                 margin: "0 auto",
                 display: "block",
