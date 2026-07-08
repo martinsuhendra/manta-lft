@@ -1,7 +1,7 @@
 import { Body, Container, Head, Html, Img, Preview, Section, Text } from "@react-email/components";
 
 import { APP_CONFIG } from "@/config/app-config";
-import { brandColors, emailLayout, getEmailAssetUrl } from "@/lib/email/base";
+import { brandColors, emailLayout, getEmailLogoUrl } from "@/lib/email/base";
 
 interface MantaEmailLayoutProps {
   preview: string;
@@ -27,15 +27,16 @@ export function MantaEmailLayout({ preview, children, footerNote }: MantaEmailLa
         <Container style={{ maxWidth: emailLayout.maxWidth, margin: "0 auto", padding: "24px 16px" }}>
           <Section
             style={{
-              backgroundColor: brandColors.card,
+              backgroundColor: brandColors.accent,
               borderRadius: "12px 12px 0 0",
+              border: `1px solid ${brandColors.border}`,
               borderBottom: `3px solid ${brandColors.primary}`,
               padding: emailLayout.headerPadding,
               textAlign: "center",
             }}
           >
             <Img
-              src={getEmailAssetUrl(emailLayout.logoPath)}
+              src={getEmailLogoUrl()}
               alt={APP_CONFIG.name}
               width={emailLayout.logoWidth}
               height={emailLayout.logoHeight}
@@ -53,6 +54,8 @@ export function MantaEmailLayout({ preview, children, footerNote }: MantaEmailLa
             style={{
               backgroundColor: brandColors.card,
               padding: "32px 32px 28px",
+              borderLeft: `1px solid ${brandColors.border}`,
+              borderRight: `1px solid ${brandColors.border}`,
             }}
           >
             {children}
@@ -62,6 +65,8 @@ export function MantaEmailLayout({ preview, children, footerNote }: MantaEmailLa
             style={{
               backgroundColor: brandColors.accent,
               borderRadius: "0 0 12px 12px",
+              border: `1px solid ${brandColors.border}`,
+              borderTop: "none",
               padding: "20px 32px",
               textAlign: "center",
             }}

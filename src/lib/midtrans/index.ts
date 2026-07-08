@@ -2,7 +2,13 @@
 
 export { createSnapTransaction, getTransactionStatus, mapMidtransStatus, verifySignature } from "./snap";
 
-export { sendPaymentSuccessEmail, updateMembershipStatus, updateTransaction, verifyWebhook } from "./webhook-service";
+export {
+  sendPaymentSuccessEmail,
+  syncTransactionFromMidtrans,
+  updateMembershipStatus,
+  updateTransaction,
+  verifyWebhook,
+} from "./webhook-service";
 
 export { MIDTRANS_CONFIG, SNAP_API_URL, STATUS_API_URL, validateMidtransConfig } from "./config";
 

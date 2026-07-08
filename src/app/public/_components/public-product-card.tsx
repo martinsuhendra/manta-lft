@@ -15,6 +15,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useMemberBookingCache } from "@/hooks/use-member-booking-cache";
 import { useMidtransSnap } from "@/lib/hooks/use-midtrans-snap";
 import { formatPrice } from "@/lib/utils";
 
@@ -66,6 +67,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
   React.useEffect(() => setMounted(true), []);
   const router = useRouter();
   const { isLoaded: isSnapLoaded, openSnap } = useMidtransSnap();
+  const { refreshAfterPayment } = useMemberBookingCache();
 
   const form = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseFormSchema),
@@ -119,6 +121,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
       form.reset();
 
       if (result.isFreePurchase) {
+        await refreshAfterPayment(result.transaction?.id);
         toast.success("Membership activated!", {
           description: "Your free trial is active immediately.",
         });
@@ -137,13 +140,15 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
       // Open Snap payment popup
       if (result.snapToken) {
         openSnap(result.snapToken, {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await refreshAfterPayment(result.transaction?.id);
             toast.success("Payment successful!", {
               description: "Your membership has been activated.",
             });
             router.push("/public/my-account");
           },
-          onPending: () => {
+          onPending: async () => {
+            await refreshAfterPayment(result.transaction?.id);
             toast.info("Payment pending", {
               description: "Waiting for payment confirmation. You can check the status in My Account.",
             });

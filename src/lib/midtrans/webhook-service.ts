@@ -130,6 +130,48 @@ async function suspendMemberships(transactionId: string) {
 }
 
 /**
+ * Sync transaction + membership status from Midtrans (client callback after Snap payment).
+ * Does not send email — webhook handles notifications.
+ */
+export async function syncTransactionFromMidtrans(transactionId: string) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+  });
+
+  if (!transaction) {
+    throw new Error("Transaction not found");
+  }
+
+  const statusResponse = await getTransactionStatus(transactionId);
+  const newStatus = mapMidtransStatus(statusResponse.transaction_status, statusResponse.fraud_status);
+
+  if (transaction.status === newStatus) {
+    return { status: newStatus, changed: false };
+  }
+
+  const notification: MidtransNotification = {
+    transaction_time: statusResponse.transaction_time,
+    transaction_status: statusResponse.transaction_status,
+    transaction_id: statusResponse.transaction_id,
+    status_message: statusResponse.status_message,
+    status_code: statusResponse.status_code,
+    signature_key: "",
+    settlement_time: statusResponse.settlement_time,
+    payment_type: statusResponse.payment_type,
+    order_id: statusResponse.order_id,
+    merchant_id: "",
+    gross_amount: statusResponse.gross_amount,
+    fraud_status: statusResponse.fraud_status,
+    currency: statusResponse.currency,
+  };
+
+  await updateTransaction(transactionId, newStatus, notification, transaction.metadata);
+  await updateMembershipStatus(transactionId, newStatus);
+
+  return { status: newStatus, changed: true };
+}
+
+/**
  * Send payment success email notification
  */
 export async function sendPaymentSuccessEmail(transaction: TransactionWithRelations) {

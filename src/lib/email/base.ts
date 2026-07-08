@@ -6,27 +6,30 @@ export interface EmailTemplate {
   text: string;
 }
 
+/** Hosted logo for email clients (absolute URL required; local assets are blocked by many clients). */
+export const EMAIL_LOGO_URL = "https://res.cloudinary.com/dnftsdhv2/image/upload/v1783484393/manta-logo_e08ti8.jpg";
+
 /** Matches `src/styles/presets/manta.css` light theme + logo palette (#EF5F18, #28184A). */
 export const brandColors = {
   primary: "#EF5F18",
   primaryLight: "#F57A3D",
   primaryDark: "#D95412",
   accentPurple: "#28184A",
-  background: "#EFECEB",
+  background: "#DFD9E6",
   foreground: "#28184A",
   text: "#3D3558",
   muted: "#7A738F",
   card: "#FFFFFF",
   border: "#E8E4EC",
-  accent: "#F5F3F7",
+  accent: "#F0ECF4",
 } as const;
 
 export const emailLayout = {
   maxWidth: 560,
-  logoPath: "/email-logo.svg",
-  logoWidth: 420,
-  logoHeight: 64,
-  headerPadding: "24px 32px 20px",
+  logoUrl: EMAIL_LOGO_URL,
+  logoWidth: 220,
+  logoHeight: 220,
+  headerPadding: "28px 32px 24px",
 } as const;
 
 export const emailInline = {
@@ -49,6 +52,10 @@ export const emailInline = {
   notesText: `margin:0;color:${brandColors.muted};font-style:italic;`,
 } as const;
 
+export function getEmailLogoUrl() {
+  return emailLayout.logoUrl;
+}
+
 export function getEmailAssetUrl(path: string) {
   const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -56,14 +63,13 @@ export function getEmailAssetUrl(path: string) {
 }
 
 export function emailHeaderHtml() {
-  const logoUrl = getEmailAssetUrl(emailLayout.logoPath);
+  const logoUrl = getEmailLogoUrl();
   return `
         <div class="header">
           <img
             src="${logoUrl}"
             alt="${APP_CONFIG.name}"
             width="${emailLayout.logoWidth}"
-            height="${emailLayout.logoHeight}"
             class="logo-image"
           />
         </div>`;
@@ -79,15 +85,23 @@ export function emailFooterHtml(note?: string) {
 
 export const baseStyles = `
   <style>
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background-color: ${brandColors.background};
+    }
     .email-container {
       max-width: ${emailLayout.maxWidth}px;
       margin: 0 auto;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background-color: ${brandColors.background};
       color: ${brandColors.text};
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid ${brandColors.border};
     }
     .header {
-      background: ${brandColors.card};
+      background: ${brandColors.accent};
       padding: ${emailLayout.headerPadding};
       text-align: center;
       border-bottom: 3px solid ${brandColors.primary};

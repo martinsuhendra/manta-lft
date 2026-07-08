@@ -26,6 +26,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { APP_CONFIG } from "@/config/app-config";
+import { useMemberBookingCache } from "@/hooks/use-member-booking-cache";
 import { useMemberCancelBooking } from "@/hooks/use-member-sessions";
 import { useMidtransSnap } from "@/lib/hooks/use-midtrans-snap";
 import { formatPrice } from "@/lib/utils";
@@ -236,6 +237,7 @@ async function handleReopenPayment(
     options?: { onSuccess?: () => void; onPending?: () => void; onError?: () => void; onClose?: () => void },
   ) => void,
   router: ReturnType<typeof useRouter>,
+  refreshAfterPayment: (transactionId?: string) => Promise<void>,
 ) {
   if (!isSnapLoaded) {
     toast.error("Payment gateway not ready", { description: "Please wait a moment and try again." });
@@ -250,11 +252,13 @@ async function handleReopenPayment(
       return;
     }
     openSnap(result.snapToken, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        await refreshAfterPayment(transactionId);
         toast.success("Payment successful!", { description: "Your membership has been activated." });
         router.refresh();
       },
-      onPending: () => {
+      onPending: async () => {
+        await refreshAfterPayment(transactionId);
         toast.info("Payment pending", { description: "Waiting for payment confirmation." });
         router.refresh();
       },
@@ -330,6 +334,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [reopeningPayment, setReopeningPayment] = useState<string | null>(null);
   const { isLoaded: isSnapLoaded, openSnap } = useMidtransSnap();
+  const { refreshAfterPayment } = useMemberBookingCache();
   const cancelBookingMutation = useMemberCancelBooking();
 
   const form = useForm<EditProfileFormValues>({
@@ -695,7 +700,14 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                               size="sm"
                               className="mt-3"
                               onClick={() =>
-                                handleReopenPayment(inv.id, setReopeningPayment, isSnapLoaded, openSnap, router)
+                                handleReopenPayment(
+                                  inv.id,
+                                  setReopeningPayment,
+                                  isSnapLoaded,
+                                  openSnap,
+                                  router,
+                                  refreshAfterPayment,
+                                )
                               }
                               disabled={reopeningPayment === inv.id}
                             >
@@ -750,7 +762,14 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                                     type="button"
                                     className="text-primary text-xs font-bold tracking-widest uppercase hover:underline"
                                     onClick={() =>
-                                      handleReopenPayment(inv.id, setReopeningPayment, isSnapLoaded, openSnap, router)
+                                      handleReopenPayment(
+                                        inv.id,
+                                        setReopeningPayment,
+                                        isSnapLoaded,
+                                        openSnap,
+                                        router,
+                                        refreshAfterPayment,
+                                      )
                                     }
                                     disabled={reopeningPayment === inv.id}
                                   >
