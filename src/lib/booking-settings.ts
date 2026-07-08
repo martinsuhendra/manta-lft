@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/generated/prisma";
 
+import { getSessionStartAt, type SessionForPolicy } from "./session-datetime";
+
+export type { SessionForPolicy };
+export { getSessionStartAt };
+
 /** Default values when no BookingSettings row exists (e.g. first deploy). */
 export const DEFAULT_BOOKING_SETTINGS = {
   endBookingPeriodHours: 0,
@@ -28,32 +33,6 @@ export async function getBookingSettings(brandId?: string): Promise<BookingSetti
     endBookingPeriodHours: row.endBookingPeriodHours,
     cancellationDeadlineHours: row.cancellationDeadlineHours,
   };
-}
-
-export interface SessionForPolicy {
-  date: Date;
-  startTime: string;
-}
-
-/**
- * Parses startTime (e.g. "09:00" or "09:00:00") to [hours, minutes].
- * Session times are interpreted in server local timezone.
- */
-function parseStartTime(startTime: string): [number, number] {
-  const parts = startTime.trim().split(":");
-  const hours = parseInt(parts[0] ?? "0", 10);
-  const minutes = parseInt(parts[1] ?? "0", 10);
-  return [hours, minutes];
-}
-
-/**
- * Combines session date and startTime into a single Date (server local time).
- * Used for booking cutoff and cancellation deadline checks.
- */
-export function getSessionStartAt(session: SessionForPolicy): Date {
-  const d = new Date(session.date);
-  const [hours, minutes] = parseStartTime(session.startTime);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, minutes, 0, 0);
 }
 
 /**
