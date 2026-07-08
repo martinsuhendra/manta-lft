@@ -27,9 +27,8 @@ export const brandColors = {
 export const emailLayout = {
   maxWidth: 560,
   logoUrl: EMAIL_LOGO_URL,
-  logoWidth: 220,
-  logoHeight: 220,
-  headerPadding: "28px 32px 24px",
+  logoWidth: 128,
+  headerPadding: "16px 24px 14px",
 } as const;
 
 export const emailInline = {
