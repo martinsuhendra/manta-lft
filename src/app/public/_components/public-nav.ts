@@ -10,6 +10,46 @@ export const NAV_ITEMS: PublicNavItem[] = [
   { label: "Book", href: "/public/book" },
 ];
 
+export function getPathFromHref(href: string) {
+  const [path] = href.split("#");
+  return path || "/public";
+}
+
+export function getHashFromHref(href: string) {
+  const [, hash = ""] = href.split("#");
+  return hash ? `#${hash}` : "";
+}
+
+export function waitForSectionAndScroll(hash: string, maxAttempts = 100) {
+  const id = hash.replace("#", "");
+  if (!id || typeof document === "undefined") return () => {};
+
+  let attempts = 0;
+  let frame = 0;
+  let cancelled = false;
+
+  function tryScroll() {
+    if (cancelled) return;
+
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    if (attempts++ < maxAttempts) {
+      frame = requestAnimationFrame(tryScroll);
+    }
+  }
+
+  tryScroll();
+
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(frame);
+  };
+}
+
 function normalizePath(pathname: string) {
   const [withoutHash] = pathname.split("#");
   return withoutHash;

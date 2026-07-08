@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { NAV_ITEMS } from "./public-nav";
+import { NAV_ITEMS, waitForSectionAndScroll } from "./public-nav";
 
 interface UseHeaderScrollSpyParams {
   pathname: string;
@@ -11,6 +11,7 @@ interface UseHeaderScrollSpyParams {
 export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeHash, setActiveHash] = useState("");
+  const cancelScrollRef = useRef<(() => void) | null>(null);
 
   const trackedSectionHashes = useMemo(
     () =>
@@ -20,54 +21,70 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
     [],
   );
 
+  const scrollToHash = useCallback((hash: string) => {
+    cancelScrollRef.current?.();
+    cancelScrollRef.current = waitForSectionAndScroll(hash);
+  }, []);
+
+  const cancelPendingScroll = useCallback(() => {
+    cancelScrollRef.current?.();
+    cancelScrollRef.current = null;
+  }, []);
+
   useEffect(() => {
     setActiveHash(window.location.hash || "");
 
     function handleScroll() {
       setIsScrolled(window.scrollY > 10);
-      if (window.scrollY < 120) {
+      if (window.scrollY < 120 && !window.location.hash) {
         setActiveHash("");
       }
     }
 
     function handleHashChange() {
-      setActiveHash(window.location.hash || "");
+      const hash = window.location.hash || "";
+      setActiveHash(hash);
+      if (window.location.pathname === "/public" && hash) {
+        scrollToHash(hash);
+      }
     }
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("hashchange", handleHashChange);
+    handleScroll();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("hashchange", handleHashChange);
+      cancelPendingScroll();
     };
-  }, []);
+  }, [cancelPendingScroll, scrollToHash]);
 
   useEffect(() => {
-    setActiveHash(window.location.hash || "");
-  }, [pathname]);
+    const hash = window.location.hash || "";
+    setActiveHash(hash);
+
+    if (pathname !== "/public" || !hash) {
+      cancelPendingScroll();
+      return;
+    }
+
+    scrollToHash(hash);
+    return cancelPendingScroll;
+  }, [cancelPendingScroll, pathname, scrollToHash]);
 
   useEffect(() => {
     if (pathname !== "/public") return;
     if (!trackedSectionHashes.length) return;
 
-    const sectionEntries = trackedSectionHashes
-      .map((hash) => {
-        const id = hash.replace("#", "");
-        const element = document.getElementById(id);
-        if (!element) return null;
-        return { hash, element };
-      })
-      .filter((entry): entry is { hash: string; element: HTMLElement } => Boolean(entry));
-
-    if (!sectionEntries.length) return;
-
+    const trackedIds = trackedSectionHashes.map((hash) => hash.replace("#", ""));
     const intersectionState = new Map<string, number>();
-    sectionEntries.forEach((entry) => {
-      intersectionState.set(entry.hash, 0);
-    });
+    const observedElements = new Map<string, HTMLElement>();
+    let pollFrame = 0;
+    let pollAttempts = 0;
+    let pollingCancelled = false;
 
-    const observer = new IntersectionObserver(
+    const intersectionObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const hash = `#${entry.target.id}`;
@@ -75,7 +92,7 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
           intersectionState.set(hash, entry.isIntersecting ? entry.intersectionRatio : 0);
         }
 
-        if (window.scrollY < 120) {
+        if (window.scrollY < 120 && !window.location.hash) {
           setActiveHash("");
           return;
         }
@@ -92,11 +109,44 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
       },
     );
 
-    for (const entry of sectionEntries) {
-      observer.observe(entry.element);
+    function syncObservedSections() {
+      for (const id of trackedIds) {
+        const element = document.getElementById(id);
+        const observed = observedElements.get(id);
+        if (element === observed) continue;
+
+        if (observed) intersectionObserver.unobserve(observed);
+        if (!element) {
+          observedElements.delete(id);
+          intersectionState.set(`#${id}`, 0);
+          continue;
+        }
+
+        observedElements.set(id, element);
+        intersectionState.set(`#${id}`, 0);
+        intersectionObserver.observe(element);
+      }
     }
 
-    return () => observer.disconnect();
+    function pollForSections() {
+      if (pollingCancelled) return;
+
+      syncObservedSections();
+
+      const allSectionsFound = trackedIds.every((id) => observedElements.has(id));
+      if (allSectionsFound || pollAttempts++ >= 120) return;
+
+      pollFrame = requestAnimationFrame(pollForSections);
+    }
+
+    syncObservedSections();
+    pollForSections();
+
+    return () => {
+      pollingCancelled = true;
+      cancelAnimationFrame(pollFrame);
+      intersectionObserver.disconnect();
+    };
   }, [pathname, trackedSectionHashes]);
 
   return { activeHash, isScrolled };

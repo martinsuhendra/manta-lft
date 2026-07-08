@@ -12,6 +12,7 @@ import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { usePublicWaiver } from "@/hooks/use-public-waiver";
 import { signUpFormSchema } from "@/lib/validators";
 
 import {
@@ -27,12 +28,6 @@ import {
 import { SignUpFormFields } from "./sign-up-form-fields";
 import { SignUpWaiverDialog } from "./sign-up-waiver-dialog";
 
-interface PublicWaiverResponse {
-  contentHtml: string;
-  version: number;
-  isActive: boolean;
-}
-
 interface SignUpDialogProps {
   children: React.ReactNode;
 }
@@ -43,9 +38,12 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   const [isWaiverDialogOpen, setIsWaiverDialogOpen] = useState(false);
   const [isWaiverConfirmed, setIsWaiverConfirmed] = useState(false);
   const [pendingRegistrationData, setPendingRegistrationData] = useState<z.infer<typeof signUpFormSchema> | null>(null);
-  const [waiver, setWaiver] = useState<PublicWaiverResponse | null>(null);
-  const [isWaiverLoading, setIsWaiverLoading] = useState(true);
   const router = useRouter();
+  const {
+    data: waiver,
+    isLoading: isWaiverLoading,
+    isError: isWaiverError,
+  } = usePublicWaiver(isOpen || isWaiverDialogOpen);
 
   const form = useForm<z.infer<typeof signUpFormSchema>>({
     resolver: zodResolver(signUpFormSchema),
@@ -64,30 +62,14 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   });
 
   useEffect(() => {
-    let isMounted = true;
+    if (!waiver) return;
+    form.setValue("waiverVersion", waiver.version, { shouldValidate: true });
+    form.setValue("acceptWaiver", true, { shouldValidate: true });
+  }, [form, waiver]);
 
-    async function loadWaiver() {
-      try {
-        const response = await fetch("/api/public/waiver");
-        if (!response.ok) throw new Error("Failed to load waiver");
-        const data = (await response.json()) as PublicWaiverResponse;
-        if (!isMounted) return;
-        setWaiver(data);
-        form.setValue("waiverVersion", data.version, { shouldValidate: true });
-        form.setValue("acceptWaiver", true, { shouldValidate: true });
-      } catch {
-        if (!isMounted) return;
-        toast.error("Failed to load waiver");
-      } finally {
-        if (isMounted) setIsWaiverLoading(false);
-      }
-    }
-
-    void loadWaiver();
-    return () => {
-      isMounted = false;
-    };
-  }, [form]);
+  useEffect(() => {
+    if (isWaiverError) toast.error("Failed to load waiver");
+  }, [isWaiverError]);
 
   const submitRegistration = async (data: z.infer<typeof signUpFormSchema>) => {
     setIsLoading(true);
@@ -207,7 +189,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
       <SignUpWaiverDialog
         open={isWaiverDialogOpen}
         isLoading={isLoading}
-        waiver={waiver}
+        waiver={waiver ?? null}
         isWaiverConfirmed={isWaiverConfirmed}
         onOpenChange={(open) => {
           if (isLoading) return;

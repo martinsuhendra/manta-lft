@@ -65,7 +65,7 @@ export function ShopHeader({ session }: ShopHeaderProps) {
 
         <PublicDesktopNav pathname={pathname} activeHash={activeHash} />
 
-        <nav className="hidden items-center justify-end gap-2 md:flex">
+        <nav className="hidden items-center justify-end gap-2 lg:flex">
           {session ? (
             <>
               <TeacherViewToggle role={session.user.role} appearance="public" />
