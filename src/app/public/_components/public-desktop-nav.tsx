@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { PublicHashLink } from "./public-hash-link";
 import { isNavItemActive, NAV_ITEMS } from "./public-nav";
 
 interface PublicDesktopNavProps {
@@ -14,7 +15,7 @@ export function PublicDesktopNav({ pathname, activeHash }: PublicDesktopNavProps
   return (
     <nav className="hidden items-center gap-1 lg:flex">
       {NAV_ITEMS.map((item) => (
-        <Link key={item.href} href={item.href}>
+        <PublicHashLink key={item.href} href={item.href}>
           <Button
             variant="ghost"
             size="sm"
@@ -27,7 +28,7 @@ export function PublicDesktopNav({ pathname, activeHash }: PublicDesktopNavProps
           >
             {item.label}
           </Button>
-        </Link>
+        </PublicHashLink>
       ))}
     </nav>
   );

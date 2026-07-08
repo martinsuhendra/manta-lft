@@ -62,6 +62,7 @@ export function SignUpWaiverDialog({
               <Checkbox
                 checked={isWaiverConfirmed}
                 onCheckedChange={(value) => onWaiverConfirmedChange(Boolean(value))}
+                className="data-[state=checked]:border-brand-primary data-[state=checked]:bg-brand-primary dark:data-[state=checked]:bg-brand-primary"
               />
               <span>I have read this waiver and voluntarily agree to its terms.</span>
             </label>

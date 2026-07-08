@@ -19,6 +19,7 @@ import {
 import { APP_CONFIG } from "@/config/app-config";
 import { cn } from "@/lib/utils";
 
+import { PublicHashLink } from "./public-hash-link";
 import { isNavItemActive, NAV_ITEMS } from "./public-nav";
 import { ShopBrandSwitcher } from "./shop-brand-switcher";
 import { SignUpDialog } from "./sign-up-dialog";
@@ -64,7 +65,7 @@ export function PublicMobileMenu({
             <nav className="space-y-2">
               {NAV_ITEMS.map((item) => (
                 <SheetClose asChild key={item.href}>
-                  <Link href={item.href}>
+                  <PublicHashLink href={item.href}>
                     <Button
                       variant="ghost"
                       className={cn(
@@ -75,7 +76,7 @@ export function PublicMobileMenu({
                     >
                       {item.label}
                     </Button>
-                  </Link>
+                  </PublicHashLink>
                 </SheetClose>
               ))}
             </nav>

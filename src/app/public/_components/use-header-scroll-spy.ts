@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { NAV_ITEMS } from "./public-nav";
+import { NAV_ITEMS, waitForSectionAndScroll } from "./public-nav";
 
 interface UseHeaderScrollSpyParams {
   pathname: string;
@@ -25,17 +25,22 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
 
     function handleScroll() {
       setIsScrolled(window.scrollY > 10);
-      if (window.scrollY < 120) {
+      if (window.scrollY < 120 && !window.location.hash) {
         setActiveHash("");
       }
     }
 
     function handleHashChange() {
-      setActiveHash(window.location.hash || "");
+      const hash = window.location.hash || "";
+      setActiveHash(hash);
+      if (window.location.pathname === "/public" && hash) {
+        waitForSectionAndScroll(hash);
+      }
     }
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("hashchange", handleHashChange);
+    handleScroll();
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -44,30 +49,22 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
   }, []);
 
   useEffect(() => {
-    setActiveHash(window.location.hash || "");
+    const hash = window.location.hash || "";
+    setActiveHash(hash);
+    if (pathname !== "/public" || !hash) return;
+
+    return waitForSectionAndScroll(hash);
   }, [pathname]);
 
   useEffect(() => {
     if (pathname !== "/public") return;
     if (!trackedSectionHashes.length) return;
 
-    const sectionEntries = trackedSectionHashes
-      .map((hash) => {
-        const id = hash.replace("#", "");
-        const element = document.getElementById(id);
-        if (!element) return null;
-        return { hash, element };
-      })
-      .filter((entry): entry is { hash: string; element: HTMLElement } => Boolean(entry));
-
-    if (!sectionEntries.length) return;
-
+    const trackedIds = trackedSectionHashes.map((hash) => hash.replace("#", ""));
     const intersectionState = new Map<string, number>();
-    sectionEntries.forEach((entry) => {
-      intersectionState.set(entry.hash, 0);
-    });
+    const observedElements = new Map<string, HTMLElement>();
 
-    const observer = new IntersectionObserver(
+    const intersectionObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const hash = `#${entry.target.id}`;
@@ -75,7 +72,7 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
           intersectionState.set(hash, entry.isIntersecting ? entry.intersectionRatio : 0);
         }
 
-        if (window.scrollY < 120) {
+        if (window.scrollY < 120 && !window.location.hash) {
           setActiveHash("");
           return;
         }
@@ -92,11 +89,37 @@ export function useHeaderScrollSpy({ pathname }: UseHeaderScrollSpyParams) {
       },
     );
 
-    for (const entry of sectionEntries) {
-      observer.observe(entry.element);
+    function syncObservedSections() {
+      for (const id of trackedIds) {
+        const element = document.getElementById(id);
+        const observed = observedElements.get(id);
+        if (element === observed) continue;
+
+        if (observed) intersectionObserver.unobserve(observed);
+        if (!element) {
+          observedElements.delete(id);
+          intersectionState.set(`#${id}`, 0);
+          continue;
+        }
+
+        observedElements.set(id, element);
+        intersectionState.set(`#${id}`, 0);
+        intersectionObserver.observe(element);
+      }
     }
 
-    return () => observer.disconnect();
+    syncObservedSections();
+
+    // Sections rendered inside Suspense boundaries stream in after this effect
+    // runs, and hydration can replace the streamed DOM nodes, so keep watching
+    // the DOM and re-observe whenever a tracked section's element changes.
+    const mutationObserver = new MutationObserver(syncObservedSections);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      intersectionObserver.disconnect();
+      mutationObserver.disconnect();
+    };
   }, [pathname, trackedSectionHashes]);
 
   return { activeHash, isScrolled };
