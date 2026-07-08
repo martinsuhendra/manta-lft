@@ -120,8 +120,8 @@ export function SignUpFormFields({ control }: SignUpFormFieldsProps) {
       />
       <FormField
         control={control}
-        name="waiverVersion"
-        render={({ field }) => <input type="hidden" value={field.value} readOnly />}
+        name="waiverAcceptances"
+        render={({ field }) => <input type="hidden" value={JSON.stringify(field.value)} readOnly />}
       />
       <FormField
         control={control}

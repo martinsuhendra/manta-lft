@@ -6,6 +6,12 @@ import { z } from "zod";
 import { getProductWhereForBrandAccess, handleApiError, requireBrandAccess, requireSuperAdmin } from "@/lib/api-utils";
 import { parseCloudinaryAsset, resolveAssetUrl } from "@/lib/cloudinary-asset";
 import { prisma } from "@/lib/generated/prisma";
+import {
+  parseOptionalDateTime,
+  productDiscountFieldsSchema,
+  refineProductDiscount,
+} from "@/lib/product-discount-schema";
+import { serializeAdminProduct } from "@/lib/product-serializer";
 
 const createProductSchema = z
   .object({
@@ -25,7 +31,9 @@ const createProductSchema = z
     isActive: z.boolean().optional().default(true),
     isPublic: z.boolean().optional().default(true),
   })
+  .merge(productDiscountFieldsSchema)
   .superRefine((data, ctx) => {
+    refineProductDiscount(data, ctx);
     if (data.isPurchaseUnlimited) return;
     if (typeof data.purchaseLimitPerUser === "number" && data.purchaseLimitPerUser >= 1) return;
     ctx.addIssue({
@@ -44,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     const products = await prisma.product.findMany({
       where: whereBrand,
-      orderBy: { position: "asc" },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
       include: {
         productBrands: {
           select: {
@@ -58,15 +66,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      products.map((product) => ({
-        ...product,
-        brandIds: product.productBrands.map((pb) => pb.brandId),
-        brands: product.productBrands.map((pb) => pb.brand),
-        imageAsset: parseCloudinaryAsset(product.imageAsset),
-        image: resolveAssetUrl(product.imageAsset, product.image),
-      })),
-    );
+    return NextResponse.json(products.map((product) => serializeAdminProduct(product)));
   } catch (error) {
     return handleApiError(error, "Failed to fetch membership products");
   }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = createProductSchema.parse(body);
-    const { brandIds, ...productData } = validatedData;
+    const { brandIds, salePrice, discountStartsAt, discountEndsAt, ...productData } = validatedData;
 
     const brands = await prisma.brand.findMany({
       where: { id: { in: brandIds }, isActive: true },
@@ -93,6 +93,9 @@ export async function POST(request: NextRequest) {
     const product = await prisma.product.create({
       data: {
         ...productData,
+        salePrice: salePrice ?? null,
+        discountStartsAt: parseOptionalDateTime(discountStartsAt),
+        discountEndsAt: parseOptionalDateTime(discountEndsAt),
         imageAsset: imageAsset ?? Prisma.JsonNull,
         image: resolveAssetUrl(imageAsset, validatedData.image),
         productBrands: {
@@ -109,14 +112,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        ...product,
-        brandIds: product.productBrands.map((pb) => pb.brandId),
-        brands: product.productBrands.map((pb) => pb.brand),
-      },
-      { status: 201 },
-    );
+    return NextResponse.json(serializeAdminProduct(product), { status: 201 });
   } catch (error) {
     return handleApiError(error, "Failed to create membership product");
   }

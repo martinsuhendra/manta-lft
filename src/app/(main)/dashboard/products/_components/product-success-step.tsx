@@ -4,11 +4,12 @@ import * as React from "react";
 
 import { CalendarDays, CheckCircle2, Hash, Layers, Package, Sparkles, Users } from "lucide-react";
 
+import { ProductPriceDisplay } from "@/components/product-price-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { formatPrice } from "@/lib/utils";
+import { resolveProductPricing } from "@/lib/checkout-pricing";
 
 import { Item } from "../../admin/items/_components/schema";
 
@@ -29,6 +30,24 @@ function quotaTypeLabel(type: QuotaType, quotaValue?: number, poolName?: string)
   if (type === "SHARED" && poolName) return `Shared · ${poolName}`;
   if (type === "FREE") return "Unlimited";
   return type;
+}
+
+function SuccessPriceDisplay({ formData }: { formData: FormData }) {
+  const price = formData.price || 0;
+  const pricing =
+    formData.isOnSale && formData.salePrice != null
+      ? resolveProductPricing({ price, salePrice: formData.salePrice })
+      : resolveProductPricing({ price });
+
+  return (
+    <ProductPriceDisplay
+      listPrice={price}
+      finalPrice={pricing.priceAfterProduct}
+      isOnSale={pricing.isOnSale}
+      discountLabel={pricing.discountLabel}
+      size="sm"
+    />
+  );
 }
 
 function ProductSuccessHero({ isEdit, savedProduct }: { isEdit: boolean; savedProduct: Product }) {
@@ -108,9 +127,7 @@ function ProductSuccessSummaryPanel({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div className="bg-muted/40 flex flex-col gap-0.5 rounded-xl border px-3 py-2.5">
           <span className="text-muted-foreground text-xs font-medium">Price</span>
-          <span className="text-foreground text-base font-semibold tabular-nums">
-            {formatPrice(formData.price || 0)}
-          </span>
+          <SuccessPriceDisplay formData={formData} />
         </div>
         <div className="bg-muted/40 flex flex-col gap-0.5 rounded-xl border px-3 py-2.5">
           <span className="text-muted-foreground flex items-center gap-1 text-xs font-medium">
@@ -265,6 +282,10 @@ export function ProductSuccessStep({ isEdit, summary, onClose }: ProductSuccessS
                 name={formData.name}
                 description={formData.description}
                 price={formData.price || 0}
+                isOnSale={formData.isOnSale}
+                salePrice={formData.salePrice}
+                discountStartsAt={formData.discountStartsAt}
+                discountEndsAt={formData.discountEndsAt}
                 validDays={formData.validDays || 30}
                 image={formData.image}
                 whatIsIncluded={formData.whatIsIncluded}

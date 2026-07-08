@@ -7,7 +7,7 @@ import { authOptions } from "@/auth";
 import { getBrandFilterFromRequest, requireBrandAccess } from "@/lib/api-utils";
 import { sumParticipantSlotsBySessionIds } from "@/lib/booking-aggregates";
 import { prisma } from "@/lib/generated/prisma";
-import { createPublicCache, publicCacheHeaders } from "@/lib/http-cache";
+import { getSessionStartAt } from "@/lib/session-datetime";
 import { USER_ROLES } from "@/lib/types";
 
 interface ResolvedBrandWhereResult {
@@ -46,12 +46,13 @@ async function resolvePublicSessionsBrandWhere(
   return { whereBrand: { brandId: brand.id }, errorResponse: null };
 }
 
-const getCachedPublicSessions = createPublicCache(["public-sessions"], async (cacheKey: string) => {
-  const { whereBrand, whereConditions } = JSON.parse(cacheKey) as {
-    whereBrand: Prisma.ClassSessionWhereInput;
-    whereConditions: Prisma.ClassSessionWhereInput;
-  };
-
+async function fetchPublicSessions({
+  whereBrand,
+  whereConditions,
+}: {
+  whereBrand: Prisma.ClassSessionWhereInput;
+  whereConditions: Prisma.ClassSessionWhereInput;
+}) {
   const sessions = await prisma.classSession.findMany({
     where: { ...whereConditions, ...whereBrand },
     include: {
@@ -75,12 +76,16 @@ const getCachedPublicSessions = createPublicCache(["public-sessions"], async (ca
     orderBy: [{ date: "asc" }, { startTime: "asc" }],
   });
 
+  const now = new Date();
+  // Drop sessions that have already started (studio timezone) — avoids wasted eligibility calls.
+  const upcomingSessions = sessions.filter((s) => getSessionStartAt({ date: s.date, startTime: s.startTime }) > now);
+
   const slotTotals = await sumParticipantSlotsBySessionIds(
-    sessions.map((s) => s.id),
+    upcomingSessions.map((s) => s.id),
     "not-cancelled",
   );
 
-  return sessions.map((s) => {
+  return upcomingSessions.map((s) => {
     const totalSlots = slotTotals.get(s.id) ?? 0;
     return {
       ...s,
@@ -89,7 +94,7 @@ const getCachedPublicSessions = createPublicCache(["public-sessions"], async (ca
       capacity: s.item.capacity,
     };
   });
-});
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -132,10 +137,12 @@ export async function GET(request: NextRequest) {
       whereConditions.itemId = itemId;
     }
 
-    const cacheKey = JSON.stringify({ whereBrand, whereConditions });
-    const result = await getCachedPublicSessions(cacheKey);
+    // Live capacity — never CDN/unstable_cache; spotsLeft must reflect bookings immediately.
+    const result = await fetchPublicSessions({ whereBrand, whereConditions });
 
-    return NextResponse.json(result, { headers: publicCacheHeaders() });
+    return NextResponse.json(result, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     console.error("Error fetching member sessions:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

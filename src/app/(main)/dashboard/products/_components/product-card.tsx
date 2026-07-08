@@ -23,8 +23,21 @@ import { Product } from "./schema";
 
 type ProductData = Pick<
   Product,
-  "name" | "description" | "price" | "validDays" | "image" | "paymentUrl" | "whatIsIncluded" | "isActive" | "createdAt"
+  | "name"
+  | "description"
+  | "price"
+  | "salePrice"
+  | "isOnSale"
+  | "discountLabel"
+  | "validDays"
+  | "image"
+  | "paymentUrl"
+  | "whatIsIncluded"
+  | "isActive"
+  | "createdAt"
 > & {
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   _count: { memberships: number };
 };
 
@@ -193,6 +206,10 @@ interface ProductCardProps {
   name?: string;
   description?: string;
   price?: number;
+  salePrice?: number | null;
+  isOnSale?: boolean;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   validDays?: number;
   image?: string;
   paymentUrl?: string;
@@ -246,9 +263,13 @@ export function ProductCard(props: ProductCardProps) {
         onDeleteProduct={onDeleteProduct}
       />
       <CardContent className={compact ? "space-y-2 px-4 pt-0 pb-2" : "pb-3"}>
-        {compact ? <ProductCardStats data={data} compact /> : null}
+        {compact ? (
+          <ProductCardStats data={data} compact previewSale={isPreview} showConfiguredSale={Boolean(product)} />
+        ) : null}
         {!compact ? <ProductCardImage data={data} /> : null}
-        {!compact ? <ProductCardStats data={data} /> : null}
+        {!compact ? (
+          <ProductCardStats data={data} previewSale={isPreview} showConfiguredSale={Boolean(product)} />
+        ) : null}
         <ProductCardIncludes data={data} isPreview={isPreview} isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
         <ProductCardFeatures product={product} compact={compact} />
       </CardContent>
@@ -260,6 +281,10 @@ export function ProductPreview({
   name,
   description,
   price,
+  salePrice,
+  isOnSale,
+  discountStartsAt,
+  discountEndsAt,
   validDays,
   image,
   whatIsIncluded,
@@ -268,6 +293,10 @@ export function ProductPreview({
   name: string;
   description?: string;
   price: number;
+  salePrice?: number | null;
+  isOnSale?: boolean;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   validDays: number;
   image?: string;
   whatIsIncluded?: string;
@@ -280,6 +309,10 @@ export function ProductPreview({
         name={name}
         description={description}
         price={price}
+        salePrice={isOnSale ? salePrice : null}
+        isOnSale={isOnSale}
+        discountStartsAt={discountStartsAt}
+        discountEndsAt={discountEndsAt}
         validDays={validDays}
         image={image}
         whatIsIncluded={whatIsIncluded}

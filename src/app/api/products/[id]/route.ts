@@ -8,6 +8,12 @@ import { handleApiError, requireAuth, requireSuperAdmin } from "@/lib/api-utils"
 import { deleteCloudinaryAsset } from "@/lib/cloudinary";
 import { parseCloudinaryAsset, resolveAssetUrl } from "@/lib/cloudinary-asset";
 import { prisma } from "@/lib/generated/prisma";
+import {
+  parseOptionalDateTime,
+  productDiscountFieldsSchema,
+  refineProductDiscount,
+} from "@/lib/product-discount-schema";
+import { serializeAdminProduct } from "@/lib/product-serializer";
 
 const updateProductSchema = z
   .object({
@@ -28,7 +34,11 @@ const updateProductSchema = z
     isActive: z.boolean().optional(),
     isPublic: z.boolean().optional(),
   })
+  .merge(productDiscountFieldsSchema)
   .superRefine((data, ctx) => {
+    if (typeof data.price === "number" && data.salePrice != null) {
+      refineProductDiscount({ price: data.price, salePrice: data.salePrice }, ctx);
+    }
     const hasUnlimitedFlag = typeof data.isPurchaseUnlimited === "boolean";
     const hasPurchaseLimit = Object.prototype.hasOwnProperty.call(data, "purchaseLimitPerUser");
     if (!hasUnlimitedFlag && !hasPurchaseLimit) return;
@@ -67,13 +77,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      ...product,
-      brandIds: product.productBrands.map((pb) => pb.brandId),
-      brands: product.productBrands.map((pb) => pb.brand),
-      imageAsset: parseCloudinaryAsset(product.imageAsset),
-      image: resolveAssetUrl(product.imageAsset, product.image),
-    });
+    return NextResponse.json(serializeAdminProduct(product));
   } catch (error) {
     return handleApiError(error, "Failed to fetch membership product");
   }
@@ -87,7 +91,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const body = await request.json();
     const validatedData = updateProductSchema.parse(body);
-    const { brandIds, imageAsset: imageAssetInput, ...updateData } = validatedData;
+    const {
+      brandIds,
+      imageAsset: imageAssetInput,
+      salePrice,
+      discountStartsAt,
+      discountEndsAt,
+      ...updateData
+    } = validatedData;
     const existingProduct = await prisma.product.findUnique({
       where: { id },
       select: { imageAsset: true },
@@ -121,6 +132,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data: {
         ...updateData,
+        ...(Object.prototype.hasOwnProperty.call(validatedData, "salePrice") && {
+          salePrice: salePrice ?? null,
+        }),
+        ...(Object.prototype.hasOwnProperty.call(validatedData, "discountStartsAt") && {
+          discountStartsAt: parseOptionalDateTime(discountStartsAt),
+        }),
+        ...(Object.prototype.hasOwnProperty.call(validatedData, "discountEndsAt") && {
+          discountEndsAt: parseOptionalDateTime(discountEndsAt),
+        }),
         ...(imageAssetInput !== undefined && {
           imageAsset: nextAssetForDb,
           image: resolveAssetUrl(nextAsset, validatedData.image),
@@ -148,11 +168,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       });
     }
 
-    return NextResponse.json({
-      ...product,
-      brandIds: product.productBrands.map((pb) => pb.brandId),
-      brands: product.productBrands.map((pb) => pb.brand),
-    });
+    return NextResponse.json(serializeAdminProduct(product));
   } catch (error) {
     return handleApiError(error, "Failed to update membership product");
   }

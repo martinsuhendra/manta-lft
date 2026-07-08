@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -40,10 +40,14 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   const [pendingRegistrationData, setPendingRegistrationData] = useState<z.infer<typeof signUpFormSchema> | null>(null);
   const router = useRouter();
   const {
-    data: waiver,
+    data: waiverData,
     isLoading: isWaiverLoading,
     isError: isWaiverError,
   } = usePublicWaiver(isOpen || isWaiverDialogOpen);
+  const activeWaivers = useMemo(
+    () => waiverData?.waivers.filter((waiver) => waiver.isActive) ?? [],
+    [waiverData?.waivers],
+  );
 
   const form = useForm<z.infer<typeof signUpFormSchema>>({
     resolver: zodResolver(signUpFormSchema),
@@ -54,7 +58,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
       emergencyContact: "",
       emergencyContactName: "",
       birthday: "",
-      waiverVersion: 1,
+      waiverAcceptances: [],
       acceptWaiver: true,
       password: "",
       confirmPassword: "",
@@ -62,10 +66,14 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   });
 
   useEffect(() => {
-    if (!waiver) return;
-    form.setValue("waiverVersion", waiver.version, { shouldValidate: true });
+    if (activeWaivers.length === 0) return;
+    form.setValue(
+      "waiverAcceptances",
+      activeWaivers.map((waiver) => ({ waiverId: waiver.id, version: waiver.version })),
+      { shouldValidate: true },
+    );
     form.setValue("acceptWaiver", true, { shouldValidate: true });
-  }, [form, waiver]);
+  }, [activeWaivers, form]);
 
   useEffect(() => {
     if (isWaiverError) toast.error("Failed to load waiver");
@@ -86,7 +94,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
           emergencyContact: data.emergencyContact,
           emergencyContactName: data.emergencyContactName,
           birthday: data.birthday,
-          waiverVersion: data.waiverVersion,
+          waiverAcceptances: data.waiverAcceptances,
           acceptWaiver: data.acceptWaiver,
           password: data.password,
         }),
@@ -131,7 +139,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
   };
 
   const onSubmit = async (data: z.infer<typeof signUpFormSchema>) => {
-    if (!waiver?.isActive) {
+    if (activeWaivers.length === 0) {
       await submitRegistration(data);
       return;
     }
@@ -151,7 +159,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
     await submitRegistration({
       ...pendingRegistrationData,
       acceptWaiver: true,
-      waiverVersion: waiver?.version ?? pendingRegistrationData.waiverVersion,
+      waiverAcceptances: activeWaivers.map((waiver) => ({ waiverId: waiver.id, version: waiver.version })),
     });
 
     setIsWaiverDialogOpen(false);
@@ -189,7 +197,7 @@ export function SignUpDialog({ children }: SignUpDialogProps) {
       <SignUpWaiverDialog
         open={isWaiverDialogOpen}
         isLoading={isLoading}
-        waiver={waiver ?? null}
+        waivers={activeWaivers}
         isWaiverConfirmed={isWaiverConfirmed}
         onOpenChange={(open) => {
           if (isLoading) return;

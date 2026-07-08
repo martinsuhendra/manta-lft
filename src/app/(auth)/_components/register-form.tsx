@@ -18,7 +18,9 @@ import { Input } from "@/components/ui/input";
 import { redirectToAuthContinue } from "@/lib/auth-session";
 import { signUpFormSchema } from "@/lib/validators";
 
-interface PublicWaiverResponse {
+interface PublicWaiverItem {
+  id: string;
+  name: string;
   contentHtml: string;
   version: number;
   isActive: boolean;
@@ -26,7 +28,7 @@ interface PublicWaiverResponse {
 
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [waiver, setWaiver] = useState<PublicWaiverResponse | null>(null);
+  const [waivers, setWaivers] = useState<PublicWaiverItem[]>([]);
   const [isWaiverLoading, setIsWaiverLoading] = useState(true);
   const router = useRouter();
 
@@ -39,7 +41,7 @@ export function RegisterForm() {
       emergencyContact: "",
       emergencyContactName: "",
       birthday: "",
-      waiverVersion: 1,
+      waiverAcceptances: [],
       acceptWaiver: false,
       password: "",
       confirmPassword: "",
@@ -53,11 +55,28 @@ export function RegisterForm() {
       try {
         const response = await fetch("/api/public/waiver");
         if (!response.ok) throw new Error("Failed to load waiver");
-        const data = (await response.json()) as PublicWaiverResponse;
+        const data = await response.json();
+        const activeWaivers = Array.isArray(data.waivers)
+          ? data.waivers.filter((waiver: PublicWaiverItem) => waiver.isActive)
+          : data.contentHtml
+            ? [
+                {
+                  id: "legacy",
+                  name: "Waiver",
+                  contentHtml: data.contentHtml,
+                  version: data.version,
+                  isActive: data.isActive,
+                },
+              ].filter((waiver) => waiver.isActive)
+            : [];
         if (!isMounted) return;
-        setWaiver(data);
-        form.setValue("waiverVersion", data.version, { shouldValidate: true });
-        if (!data.isActive) form.setValue("acceptWaiver", true, { shouldValidate: true });
+        setWaivers(activeWaivers);
+        form.setValue(
+          "waiverAcceptances",
+          activeWaivers.map((waiver: PublicWaiverItem) => ({ waiverId: waiver.id, version: waiver.version })),
+          { shouldValidate: true },
+        );
+        if (activeWaivers.length === 0) form.setValue("acceptWaiver", true, { shouldValidate: true });
       } catch {
         if (!isMounted) return;
         toast.error("Failed to load waiver");
@@ -88,7 +107,7 @@ export function RegisterForm() {
           emergencyContact: data.emergencyContact,
           emergencyContactName: data.emergencyContactName,
           birthday: data.birthday,
-          waiverVersion: data.waiverVersion,
+          waiverAcceptances: data.waiverAcceptances,
           acceptWaiver: data.acceptWaiver,
           password: data.password,
         }),
@@ -255,16 +274,21 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        {waiver?.isActive ? (
+        {waivers.length > 0 ? (
           <>
             <FormField
               control={form.control}
-              name="waiverVersion"
-              render={({ field }) => <input type="hidden" value={field.value} readOnly />}
+              name="waiverAcceptances"
+              render={({ field }) => <input type="hidden" value={JSON.stringify(field.value)} readOnly />}
             />
-            <div className="max-h-56 overflow-y-auto rounded-md border p-3 text-sm">
-              <div dangerouslySetInnerHTML={{ __html: waiver.contentHtml }} />
-            </div>
+            {waivers.map((waiver) => (
+              <div key={waiver.id} className="space-y-2">
+                {waivers.length > 1 ? <p className="text-sm font-medium">{waiver.name}</p> : null}
+                <div className="max-h-56 overflow-y-auto rounded-md border p-3 text-sm">
+                  <div dangerouslySetInnerHTML={{ __html: waiver.contentHtml }} />
+                </div>
+              </div>
+            ))}
             <FormField
               control={form.control}
               name="acceptWaiver"
@@ -274,7 +298,9 @@ export function RegisterForm() {
                     <Checkbox checked={field.value} onCheckedChange={(value) => field.onChange(Boolean(value))} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>I agree to this waiver and release of liability</FormLabel>
+                    <FormLabel>
+                      I agree to {waivers.length > 1 ? "these waivers" : "this waiver"} and release of liability
+                    </FormLabel>
                     <FormMessage />
                   </div>
                 </FormItem>

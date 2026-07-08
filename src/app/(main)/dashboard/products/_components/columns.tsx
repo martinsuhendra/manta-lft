@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { EllipsisVertical, Calendar, Banknote, Clock, Package } from "lucide-react";
 
+import { ProductPriceDisplay } from "@/components/product-price-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { formatPrice } from "@/lib/utils";
+import { resolveProductPricing } from "@/lib/checkout-pricing";
 
 import { DataTableColumnHeader } from "../../../../../components/data-table/data-table-column-header";
 
@@ -124,12 +125,27 @@ export const createProductColumns = (actions: ProductActions): ColumnDef<Product
     accessorKey: "price",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Price" />,
     cell: ({ row }) => {
-      const price = row.original.price;
+      const product = row.original;
+      const pricing =
+        product.salePrice != null && product.salePrice < product.price
+          ? resolveProductPricing({ price: product.price, salePrice: product.salePrice })
+          : resolveProductPricing({
+              price: product.price,
+              salePrice: product.salePrice,
+              discountStartsAt: product.discountStartsAt,
+              discountEndsAt: product.discountEndsAt,
+            });
 
       return (
         <div className="flex items-center gap-1 text-sm font-medium">
-          <Banknote className="h-3 w-3" />
-          {formatPrice(price)}
+          <Banknote className="h-3 w-3 shrink-0" />
+          <ProductPriceDisplay
+            listPrice={product.price}
+            finalPrice={product.finalPrice ?? pricing.priceAfterProduct}
+            isOnSale={pricing.isOnSale}
+            discountLabel={product.discountLabel ?? pricing.discountLabel}
+            size="sm"
+          />
         </div>
       );
     },

@@ -4,13 +4,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 
+import { Product } from "@/app/(main)/dashboard/products/_components/schema";
 import { CloudinaryAssetPayload } from "@/lib/cloudinary-asset";
 
-interface CreateProductData {
+export interface CreateProductData {
   brandIds: string[];
   name: string;
   description?: string;
   price: number;
+  salePrice?: number | null;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
   validDays: number;
   participantsPerPurchase?: number;
   isPurchaseUnlimited: boolean;
@@ -51,8 +55,11 @@ export function useUpdateProduct() {
       const response = await axios.put(`/api/products/${id}`, data);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onSuccess: (updated, { id }) => {
+      queryClient.setQueriesData<Product[]>({ queryKey: ["products"] }, (old) => {
+        if (!old) return old;
+        return old.map((product) => (product.id === id ? { ...product, ...updated, _count: product._count } : product));
+      });
     },
     onError: (error: AxiosError<{ error: string }>) => {
       toast.error(error.response?.data.error || "Failed to update product");

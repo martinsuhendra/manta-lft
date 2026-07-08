@@ -135,6 +135,11 @@ export async function GET(request: NextRequest) {
         status: transaction.status,
         paymentMethod: transaction.paymentMethod,
         paymentProvider: transaction.paymentProvider,
+        listPrice: transaction.listPrice != null ? Number(transaction.listPrice) : null,
+        productDiscountAmount:
+          transaction.productDiscountAmount != null ? Number(transaction.productDiscountAmount) : null,
+        promoDiscountAmount: transaction.promoDiscountAmount != null ? Number(transaction.promoDiscountAmount) : null,
+        promoCode: transaction.promoCode,
         paidAt: transaction.paidAt?.toISOString() ?? null,
         createdAt: transaction.createdAt.toISOString(),
         updatedAt: transaction.updatedAt.toISOString(),

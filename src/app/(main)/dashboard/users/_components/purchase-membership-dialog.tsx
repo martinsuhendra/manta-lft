@@ -115,7 +115,10 @@ export function PurchaseMembershipDialog({ open, onOpenChange, selectedMember }:
   const selectedUserId = form.watch("userId");
   const selectedMemberData = members.find((m) => m.id === selectedUserId);
   const selectedProductId = form.watch("productId");
-  const selectedProduct = products.find((p: { id: string }) => p.id === selectedProductId);
+  const selectedProduct = products.find(
+    (p: { id: string; finalPrice?: number; price: number }) => p.id === selectedProductId,
+  );
+  const selectedProductPrice = selectedProduct ? Number(selectedProduct.finalPrice ?? selectedProduct.price) : 0;
 
   const handlePurchase = async (data: PurchaseFormValues) => {
     setIsPurchasing(true);
@@ -431,7 +434,7 @@ export function PurchaseMembershipDialog({ open, onOpenChange, selectedMember }:
                                     style: "currency",
                                     currency: "IDR",
                                     minimumFractionDigits: 0,
-                                  }).format(selectedProduct.price)}{" "}
+                                  }).format(selectedProductPrice)}{" "}
                                   • Valid for {selectedProduct.validDays} days
                                 </span>
                               </div>
@@ -505,7 +508,7 @@ export function PurchaseMembershipDialog({ open, onOpenChange, selectedMember }:
                         style: "currency",
                         currency: "IDR",
                         minimumFractionDigits: 0,
-                      }).format(selectedProduct.price)}
+                      }).format(selectedProductPrice)}
                     </span>
                   </div>
                   <div className="flex justify-between">

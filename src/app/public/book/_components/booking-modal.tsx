@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from "react";
 
+import Link from "next/link";
+
 import { format } from "date-fns";
 import { CheckCircle, Loader2 } from "lucide-react";
 
@@ -29,6 +31,13 @@ import {
   PublicDialogHeader,
   PublicDialogTitle,
 } from "../../_components/public-dialog";
+
+const NO_ELIGIBLE_MEMBERSHIP_REASON = "No eligible membership for this class";
+
+function isMembershipRelatedBlock(reason: string | undefined): boolean {
+  if (!reason) return false;
+  return reason === NO_ELIGIBLE_MEMBERSHIP_REASON || reason.toLowerCase().includes("membership");
+}
 
 interface BookingModalProps {
   session: MemberSession | null;
@@ -85,9 +94,7 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
   };
 
   const handleAcceptWaiver = () => {
-    const version = waiverData?.waiver.version;
-    if (!version) return;
-    acceptWaiverMutation.mutate(version);
+    acceptWaiverMutation.mutate({});
   };
 
   if (!session) return null;
@@ -95,9 +102,17 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
   const spotsLeft = eligibility && eligibility.spotsLeft != null ? eligibility.spotsLeft : (session.spotsLeft ?? 0);
   const selectedMembership = eligibility?.eligibleMemberships.find((m) => m.id === selectedMembershipId);
   const selectedFits = selectedMembership ? spotsLeft >= selectedMembership.slotsRequired : false;
-  const needsWaiverAcceptance = waiverData?.waiver.isActive && !waiverData.hasAccepted;
+  const needsWaiverAcceptance = waiverData != null && !waiverData.hasAcceptedAll;
+  const pendingWaivers = waiverData?.pendingWaivers ?? [];
   const canBook = eligibility?.canJoin && !needsWaiverAcceptance && !!selectedMembershipId && selectedFits;
   const isPending = bookMutation.isPending || cancelMutation.isPending || acceptWaiverMutation.isPending;
+  const showSeePlans =
+    !eligibilityLoading &&
+    !waiverLoading &&
+    !needsWaiverAcceptance &&
+    !eligibility?.alreadyBooked &&
+    !eligibility?.canJoin &&
+    isMembershipRelatedBlock(eligibility?.reason);
 
   return (
     <Dialog
@@ -123,14 +138,20 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
           ) : needsWaiverAcceptance ? (
             <div className="space-y-3">
               <p className="text-muted-foreground text-sm">
-                You need to accept the waiver before you can book this session.
+                You need to accept {pendingWaivers.length > 1 ? "all waivers" : "the waiver"} before you can book this
+                session.
               </p>
-              <div className="max-h-64 overflow-y-auto rounded-md border p-3 text-sm">
-                <div dangerouslySetInnerHTML={{ __html: waiverData.waiver.contentHtml }} />
-              </div>
+              {pendingWaivers.map((waiver) => (
+                <div key={waiver.id} className="space-y-2">
+                  {pendingWaivers.length > 1 ? <p className="text-sm font-medium">{waiver.name}</p> : null}
+                  <div className="max-h-48 overflow-y-auto rounded-md border p-3 text-sm">
+                    <div dangerouslySetInnerHTML={{ __html: waiver.contentHtml }} />
+                  </div>
+                </div>
+              ))}
               <Button className="w-full" onClick={handleAcceptWaiver} disabled={isPending}>
                 {acceptWaiverMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Accept waiver
+                Accept {pendingWaivers.length > 1 ? "all waivers" : "waiver"}
               </Button>
             </div>
           ) : eligibility?.alreadyBooked ? (
@@ -195,15 +216,29 @@ export function BookingModal({ session, open, onOpenChange }: BookingModalProps)
               </Button>
             </div>
           ) : (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/50">
+            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/50">
               <p className="text-sm text-amber-800 dark:text-amber-200">
                 {eligibility?.reason ?? "You cannot book this class."}
               </p>
+              {showSeePlans ? (
+                <p className="text-sm text-amber-800/80 dark:text-amber-200/80">
+                  You need an active membership that covers this class. Browse our plans to get started.
+                </p>
+              ) : null}
             </div>
           )}
         </PublicDialogBody>
 
-        <PublicDialogFooter>
+        <PublicDialogFooter className="gap-2 sm:justify-between">
+          {showSeePlans ? (
+            <Button asChild className="w-full sm:w-auto">
+              <Link href="/public#plans" onClick={() => onOpenChange(false)}>
+                See plans
+              </Link>
+            </Button>
+          ) : (
+            <span className="hidden sm:block" />
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>

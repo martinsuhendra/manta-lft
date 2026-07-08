@@ -46,6 +46,10 @@ async function fetchAccountUser(userId: string, activeBrandId: string, today: Da
               currency: true,
               paidAt: true,
               createdAt: true,
+              listPrice: true,
+              productDiscountAmount: true,
+              promoDiscountAmount: true,
+              promoCode: true,
             },
           },
         },
@@ -55,7 +59,20 @@ async function fetchAccountUser(userId: string, activeBrandId: string, today: Da
       },
       transactions: {
         where: { brandId: activeBrandId },
-        include: {
+        select: {
+          id: true,
+          status: true,
+          amount: true,
+          currency: true,
+          paymentMethod: true,
+          paymentProvider: true,
+          paidAt: true,
+          createdAt: true,
+          productId: true,
+          listPrice: true,
+          productDiscountAmount: true,
+          promoDiscountAmount: true,
+          promoCode: true,
           product: {
             select: {
               id: true,
@@ -137,6 +154,10 @@ function formatMembershipTransaction(transaction: MembershipWithQuota["transacti
     currency: transaction.currency,
     paidAt: transaction.paidAt?.toISOString() || null,
     createdAt: transaction.createdAt.toISOString(),
+    listPrice: transaction.listPrice != null ? Number(transaction.listPrice) : null,
+    productDiscountAmount: transaction.productDiscountAmount != null ? Number(transaction.productDiscountAmount) : null,
+    promoDiscountAmount: transaction.promoDiscountAmount != null ? Number(transaction.promoDiscountAmount) : null,
+    promoCode: transaction.promoCode,
   };
 }
 
@@ -171,6 +192,11 @@ function formatPurchaseHistory(transactions: AccountTransaction[], purchaseCount
       paymentProvider: transaction.paymentProvider,
       paidAt: transaction.paidAt?.toISOString() || null,
       createdAt: transaction.createdAt.toISOString(),
+      listPrice: transaction.listPrice != null ? Number(transaction.listPrice) : null,
+      productDiscountAmount:
+        transaction.productDiscountAmount != null ? Number(transaction.productDiscountAmount) : null,
+      promoDiscountAmount: transaction.promoDiscountAmount != null ? Number(transaction.promoDiscountAmount) : null,
+      promoCode: transaction.promoCode,
       product: {
         id: product.id,
         name: product.name,

@@ -31,6 +31,7 @@ model Brand {
   bookings        Booking[]
   bookingSettings BookingSettings[]
   quotaPools      QuotaPool[]
+  promoCodes      PromoCode[]
 
   @@map("brands")
 }
@@ -85,10 +86,6 @@ model User {
   emergencyContact String?     @map("emergency_contact")
   emergencyContactName String? @map("emergency_contact_name")
   birthday      DateTime?      @db.Date
-  waiverAcceptedAt DateTime?   @map("waiver_accepted_at") @db.Timestamp(6)
-  waiverAcceptedVersion Int?   @map("waiver_accepted_version")
-  waiverAcceptedIp String?     @map("waiver_accepted_ip")
-  waiverAcceptedUserAgent String? @map("waiver_accepted_user_agent")
   accounts      Account[]
   bookings      Booking[]
   classSessions ClassSession[] @relation("SessionTeacher")
@@ -99,7 +96,8 @@ model User {
   transactions  Transaction[]
   freezeRequestsRequested MembershipFreezeRequest[] @relation("FreezeRequestedBy")
   freezeRequestsApproved  MembershipFreezeRequest[] @relation("FreezeApprovedBy")
-  waiverSettingsUpdated WaiverSettings[] @relation("WaiverUpdatedBy")
+  waiversUpdated Waiver[] @relation("WaiverUpdatedBy")
+  waiverAcceptances UserWaiverAcceptance[]
 
   @@index([role, createdAt])
   @@map("users")
@@ -139,6 +137,9 @@ model Product {
   name           String
   description    String?
   price          Decimal  @db.Decimal(10, 2)
+  salePrice      Decimal? @map("sale_price") @db.Decimal(10, 2)
+  discountStartsAt DateTime? @map("discount_starts_at") @db.Timestamp(6)
+  discountEndsAt   DateTime? @map("discount_ends_at") @db.Timestamp(6)
   validDays      Int      @map("valid_days")
   isPurchaseUnlimited  Boolean  @default(true) @map("is_purchase_unlimited")
   purchaseLimitPerUser Int?     @map("purchase_limit_per_user")
@@ -179,26 +180,74 @@ model ProductBrand {
 }
 
 model Transaction {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId          String            @map("user_id") @db.Uuid
-  productId       String            @map("product_id") @db.Uuid
-  brandId         String            @db.Uuid
-  amount          Decimal           @db.Decimal(10, 2)
-  currency        String            @default("USD")
-  status          TransactionStatus @default(PENDING)
-  paymentMethod   String?           @map("payment_method")
-  paymentProvider String?           @map("payment_provider")
-  externalId      String?           @map("external_id")
-  metadata        Json?
-  paidAt          DateTime?         @map("paid_at") @db.Timestamp(6)
-  createdAt       DateTime          @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime          @updatedAt @db.Timestamp(6)
-  memberships     Membership[]
-  product         Product           @relation(fields: [productId], references: [id])
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brand           Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String            @map("user_id") @db.Uuid
+  productId             String            @map("product_id") @db.Uuid
+  brandId               String            @db.Uuid
+  amount                Decimal           @db.Decimal(10, 2)
+  listPrice             Decimal?          @map("list_price") @db.Decimal(10, 2)
+  productDiscountAmount Decimal?          @default(0) @map("product_discount_amount") @db.Decimal(10, 2)
+  promoDiscountAmount   Decimal?          @default(0) @map("promo_discount_amount") @db.Decimal(10, 2)
+  promoCodeId           String?           @map("promo_code_id") @db.Uuid
+  promoCode             String?           @map("promo_code")
+  currency              String            @default("USD")
+  status                TransactionStatus @default(PENDING)
+  paymentMethod         String?           @map("payment_method")
+  paymentProvider       String?           @map("payment_provider")
+  externalId            String?           @map("external_id")
+  metadata              Json?
+  paidAt                DateTime?         @map("paid_at") @db.Timestamp(6)
+  createdAt             DateTime          @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime          @updatedAt @db.Timestamp(6)
+  memberships           Membership[]
+  product               Product           @relation(fields: [productId], references: [id])
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brand                 Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  promoCodeRef          PromoCode?        @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  promoCodeRedemption   PromoCodeRedemption?
 
   @@map("transactions")
+}
+
+model PromoCode {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                String
+  brandId             String              @map("brand_id") @db.Uuid
+  discountType        PromoDiscountType   @map("discount_type")
+  discountValue       Decimal             @map("discount_value") @db.Decimal(10, 2)
+  maxDiscountAmount   Decimal?            @map("max_discount_amount") @db.Decimal(10, 2)
+  startsAt            DateTime?           @map("starts_at") @db.Timestamp(6)
+  endsAt              DateTime?           @map("ends_at") @db.Timestamp(6)
+  usageLimit          Int?                @map("usage_limit")
+  usageCount          Int                 @default(0) @map("usage_count")
+  perUserLimit        Int                 @default(1) @map("per_user_limit")
+  applicableProductIds String[]           @default([]) @map("applicable_product_ids")
+  isActive            Boolean             @default(true) @map("is_active")
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  brand        Brand                 @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  redemptions  PromoCodeRedemption[]
+
+  @@unique([brandId, code])
+  @@index([brandId, isActive])
+  @@map("promo_codes")
+}
+
+model PromoCodeRedemption {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  promoCodeId    String   @map("promo_code_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  transactionId  String   @unique @map("transaction_id") @db.Uuid
+  discountAmount Decimal  @map("discount_amount") @db.Decimal(10, 2)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  promoCode   PromoCode   @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([promoCodeId, userId])
+  @@map("promo_code_redemptions")
 }
 
 model Membership {
@@ -458,6 +507,11 @@ enum TransactionStatus {
   EXPIRED
 }
 
+enum PromoDiscountType {
+  PERCENT
+  FIXED
+}
+
 // How feeAmount on TeacherItem is applied in payroll (see payroll summary).
 enum TeacherFeeModel {
   FLAT_PER_SESSION // feeAmount = total IDR per completed session
@@ -502,16 +556,34 @@ model BookingSettings {
   @@map("booking_settings")
 }
 
-model WaiverSettings {
+model Waiver {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key         String   @default("GLOBAL") @unique
+  name        String
   contentHtml String   @map("content_html")
   version     Int      @default(1)
   isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
   updatedById String?  @map("updated_by_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
   updatedBy   User?    @relation("WaiverUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  acceptances UserWaiverAcceptance[]
 
-  @@map("waiver_settings")
+  @@map("waivers")
+}
+
+model UserWaiverAcceptance {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  waiverId          String   @map("waiver_id") @db.Uuid
+  acceptedVersion   Int      @map("accepted_version")
+  acceptedAt        DateTime @default(now()) @map("accepted_at") @db.Timestamp(6)
+  acceptedIp        String?  @map("accepted_ip")
+  acceptedUserAgent String?  @map("accepted_user_agent")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  waiver            Waiver   @relation(fields: [waiverId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, waiverId])
+  @@index([waiverId])
+  @@map("user_waiver_acceptances")
 }

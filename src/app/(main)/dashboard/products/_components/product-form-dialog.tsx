@@ -16,8 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/use-products-mutation";
+import { useCreateProduct, useUpdateProduct, type CreateProductData } from "@/hooks/use-products-mutation";
 import { cloudinaryAssetSchema } from "@/lib/cloudinary-asset";
+import { productDiscountFieldsSchema, refineProductDiscount } from "@/lib/product-discount-schema";
 
 import { ProductPreview } from "./product-card";
 import { ProductFormFields } from "./product-form-fields";
@@ -40,8 +41,20 @@ const formSchema = z
     whatIsIncluded: z.string().optional(),
     isActive: z.boolean().default(true),
     isPublic: z.boolean().default(true),
+    isOnSale: z.boolean().default(false),
   })
+  .merge(productDiscountFieldsSchema)
   .superRefine((data, ctx) => {
+    if (data.isOnSale) {
+      refineProductDiscount({ price: data.price, salePrice: data.salePrice ?? null }, ctx);
+      if (data.salePrice == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Sale price is required when product is on sale",
+          path: ["salePrice"],
+        });
+      }
+    }
     if (data.isPurchaseUnlimited) return;
     if (typeof data.purchaseLimitPerUser === "number" && data.purchaseLimitPerUser >= 1) return;
     ctx.addIssue({
@@ -52,6 +65,30 @@ const formSchema = z
   });
 
 type FormData = z.infer<typeof formSchema>;
+
+function toDatetimeLocalValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function fromDatetimeLocalValue(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function mapFormToApiData(data: FormData) {
+  const { isOnSale, salePrice, discountStartsAt, discountEndsAt, ...rest } = data;
+  return {
+    ...rest,
+    salePrice: isOnSale ? (salePrice ?? null) : null,
+    discountStartsAt: isOnSale ? fromDatetimeLocalValue(discountStartsAt ?? null) : null,
+    discountEndsAt: isOnSale ? fromDatetimeLocalValue(discountEndsAt ?? null) : null,
+  };
+}
 
 const DEFAULT_FORM_VALUES: FormData = {
   brandIds: [],
@@ -69,6 +106,10 @@ const DEFAULT_FORM_VALUES: FormData = {
   whatIsIncluded: "",
   isActive: true,
   isPublic: true,
+  isOnSale: false,
+  salePrice: null,
+  discountStartsAt: null,
+  discountEndsAt: null,
 };
 
 interface ProductFormDialogProps {
@@ -104,18 +145,19 @@ function useSubmitHandler({
 }: {
   isEdit: boolean;
   product: Product | null;
-  createProduct: { mutateAsync: (data: FormData) => Promise<unknown> };
-  updateProduct: { mutateAsync: (params: { id: string; data: Partial<FormData> }) => Promise<unknown> };
+  createProduct: { mutateAsync: (data: CreateProductData) => Promise<unknown> };
+  updateProduct: { mutateAsync: (params: { id: string; data: Partial<CreateProductData> }) => Promise<unknown> };
   onOpenChange: (open: boolean) => void;
   form: UseFormReturn<FormData>;
 }) {
   return React.useCallback(
     async (data: FormData) => {
       try {
+        const payload = mapFormToApiData(data);
         if (isEdit && product) {
-          await updateProduct.mutateAsync({ id: product.id, data });
+          await updateProduct.mutateAsync({ id: product.id, data: payload });
         } else {
-          await createProduct.mutateAsync(data);
+          await createProduct.mutateAsync(payload);
         }
         onOpenChange(false);
         if (!isEdit) {
@@ -172,6 +214,10 @@ export function ProductFormDialog({
         whatIsIncluded: product.whatIsIncluded || "",
         isActive: product.isActive,
         isPublic: product.isPublic,
+        isOnSale: product.salePrice != null,
+        salePrice: product.salePrice ?? null,
+        discountStartsAt: toDatetimeLocalValue(product.discountStartsAt ?? null),
+        discountEndsAt: toDatetimeLocalValue(product.discountEndsAt ?? null),
       });
     } else if (!isEdit) {
       form.reset(DEFAULT_FORM_VALUES);
@@ -206,6 +252,10 @@ export function ProductFormDialog({
               name={form.watch("name")}
               description={form.watch("description")}
               price={form.watch("price") || 0}
+              isOnSale={form.watch("isOnSale")}
+              salePrice={form.watch("salePrice")}
+              discountStartsAt={form.watch("discountStartsAt")}
+              discountEndsAt={form.watch("discountEndsAt")}
               validDays={form.watch("validDays") || 30}
               image={form.watch("image")}
               whatIsIncluded={form.watch("whatIsIncluded")}

@@ -30,7 +30,14 @@ const signUpFieldsBaseSchema = z.object({
     .min(1, { message: "Birthday is required" })
     .refine((s) => !Number.isNaN(new Date(s).getTime()), { message: "Invalid date" })
     .refine((s) => new Date(s).getTime() < Date.now(), { message: "Birthday must be in the past" }),
-  waiverVersion: z.number().int().positive({ message: "Waiver version is required" }),
+  waiverAcceptances: z
+    .array(
+      z.object({
+        waiverId: z.string().uuid(),
+        version: z.number().int().positive(),
+      }),
+    )
+    .default([]),
   acceptWaiver: z.boolean().refine((value) => value, { message: "You must agree to the waiver" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
@@ -61,6 +68,6 @@ export const registerBodySchema = signUpFieldsBaseSchema.pick({
   emergencyContact: true,
   emergencyContactName: true,
   birthday: true,
-  waiverVersion: true,
+  waiverAcceptances: true,
   acceptWaiver: true,
 });

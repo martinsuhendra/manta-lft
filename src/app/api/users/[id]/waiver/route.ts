@@ -5,9 +5,15 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/generated/prisma";
 import { USER_ROLES } from "@/lib/types";
-import { getWaiverSettings } from "@/lib/waiver-settings";
+import {
+  getActiveWaivers,
+  getMemberWaiverStatus,
+  getUserWaiverCompliance,
+  setUserWaiverAcceptance,
+} from "@/lib/waiver-settings";
 
 const updateWaiverStatusSchema = z.object({
+  waiverId: z.string().uuid(),
   isAccepted: z.boolean(),
 });
 
@@ -20,29 +26,23 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { id } = await params;
-    const [waiver, user] = await Promise.all([
-      getWaiverSettings(),
+    const [activeWaivers, user, status] = await Promise.all([
+      getActiveWaivers(),
       prisma.user.findUnique({
         where: { id },
-        select: {
-          id: true,
-          waiverAcceptedAt: true,
-          waiverAcceptedVersion: true,
-        },
+        select: { id: true },
       }),
+      getMemberWaiverStatus(id),
     ]);
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     return NextResponse.json({
-      waiver: {
-        contentHtml: waiver.contentHtml,
-        version: waiver.version,
-        isActive: waiver.isActive,
-      },
+      waivers: activeWaivers,
       member: {
-        waiverAcceptedAt: user.waiverAcceptedAt,
-        waiverAcceptedVersion: user.waiverAcceptedVersion,
+        waivers: status.waivers,
+        hasAcceptedAll: status.hasAcceptedAll,
+        pendingWaivers: status.pendingWaivers,
       },
     });
   } catch (error) {
@@ -61,8 +61,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { id } = await params;
     const body = await request.json();
-    const { isAccepted } = updateWaiverStatusSchema.parse(body);
-    const waiver = await getWaiverSettings();
+    const { waiverId, isAccepted } = updateWaiverStatusSchema.parse(body);
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -70,27 +69,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: isAccepted
-        ? {
-            waiverAcceptedAt: new Date(),
-            waiverAcceptedVersion: waiver.version,
-          }
-        : {
-            waiverAcceptedAt: null,
-            waiverAcceptedVersion: null,
-            waiverAcceptedIp: null,
-            waiverAcceptedUserAgent: null,
-          },
-      select: {
-        id: true,
-        waiverAcceptedAt: true,
-        waiverAcceptedVersion: true,
-      },
+    await setUserWaiverAcceptance({
+      userId: id,
+      waiverId,
+      isAccepted,
     });
 
-    return NextResponse.json(updated);
+    const [compliance, status] = await Promise.all([getUserWaiverCompliance(id), getMemberWaiverStatus(id)]);
+
+    return NextResponse.json({
+      waiverId,
+      isAccepted,
+      hasAcceptedAll: status.hasAcceptedAll,
+      waiverAcceptedAt: compliance.latestAcceptedAt,
+      member: {
+        waivers: status.waivers,
+        hasAcceptedAll: status.hasAcceptedAll,
+        pendingWaivers: status.pendingWaivers,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError)
       return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });

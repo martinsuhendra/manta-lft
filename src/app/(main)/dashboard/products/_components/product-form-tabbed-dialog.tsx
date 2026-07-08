@@ -108,7 +108,6 @@ export function ProductFormTabbedDialog({
         quotaPools,
         onConfigSaved: async (savedProductId: string) => {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["products"] }),
             queryClient.invalidateQueries({ queryKey: ["product-items", savedProductId] }),
             queryClient.invalidateQueries({ queryKey: ["product-items-with-usage", savedProductId] }),
             queryClient.invalidateQueries({ queryKey: ["quota-pools", savedProductId] }),

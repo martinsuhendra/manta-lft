@@ -1,6 +1,7 @@
 import { addDays, startOfDay } from "date-fns";
 
 import { prisma } from "@/lib/generated/prisma";
+import { serializePublicProduct } from "@/lib/product-serializer";
 import { mapSessionWithCapacity } from "@/lib/session-utils";
 import { USER_ROLES } from "@/lib/types";
 
@@ -45,24 +46,29 @@ export async function getActiveProducts(brandId?: string) {
         name: true,
         description: true,
         price: true,
+        salePrice: true,
+        discountStartsAt: true,
+        discountEndsAt: true,
         validDays: true,
         participantsPerPurchase: true,
         image: true,
+        imageAsset: true,
         paymentUrl: true,
         whatIsIncluded: true,
         features: true,
         createdAt: true,
+        isPurchaseUnlimited: true,
+        purchaseLimitPerUser: true,
+        isActive: true,
+        isPublic: true,
+        position: true,
+        updatedAt: true,
         productBrands: {
-          select: { brandId: true },
+          select: { brandId: true, brand: { select: { id: true, name: true } } },
         },
       },
     });
-    return products.map((product) => ({
-      ...product,
-      brandIds: product.productBrands.map((pb) => pb.brandId),
-      price: Number(product.price),
-      createdAt: product.createdAt.toISOString(),
-    }));
+    return products.map((product) => serializePublicProduct(product));
   } catch (error) {
     console.error("Failed to fetch products:", error);
     return [];

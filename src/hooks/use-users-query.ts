@@ -14,7 +14,7 @@ export interface User {
   emergencyContact: string | null;
   emergencyContactName?: string | null;
   waiverAcceptedAt?: string | null;
-  waiverAcceptedVersion?: number | null;
+  hasAcceptedAllWaivers?: boolean;
   birthday?: string | null;
   image?: string | null;
   avatarAsset?: unknown;
