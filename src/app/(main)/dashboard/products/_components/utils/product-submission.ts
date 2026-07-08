@@ -1,6 +1,8 @@
 import { toast } from "sonner";
 
-import { FormData } from "../hooks/use-form-validation";
+import { CreateProductData } from "@/hooks/use-products-mutation";
+
+import { FormData, mapFormDataToApiPayload } from "../hooks/use-form-validation";
 import { Product, QuotaPool, CreateProductItemForm } from "../schema";
 
 interface SubmissionParams {
@@ -11,10 +13,10 @@ interface SubmissionParams {
   quotaPools: QuotaPool[];
   onConfigSaved?: (productId: string) => Promise<void> | void;
   createProduct: {
-    mutateAsync: (data: FormData) => Promise<Product>;
+    mutateAsync: (data: CreateProductData) => Promise<Product>;
   };
   updateProduct: {
-    mutateAsync: (params: { id: string; data: FormData }) => Promise<Product>;
+    mutateAsync: (params: { id: string; data: Partial<CreateProductData> }) => Promise<Product>;
   };
   onOpenChange: (open: boolean) => void;
   resetForm: () => void;
@@ -35,8 +37,9 @@ export async function handleProductSubmission({
   showSuccessStep = false,
 }: SubmissionParams): Promise<Product> {
   try {
+    const payload = mapFormDataToApiPayload(data);
     if (isEdit && product) {
-      const updated = await updateProduct.mutateAsync({ id: product.id, data });
+      const updated = await updateProduct.mutateAsync({ id: product.id, data: payload });
       await syncEditProductItemsAndQuotaPools({
         productId: product.id,
         productItems,
@@ -50,7 +53,7 @@ export async function handleProductSubmission({
       return updated;
     }
 
-    const createdProduct = await createProduct.mutateAsync(data);
+    const createdProduct = await createProduct.mutateAsync(payload);
     await createQuotaPoolsAndItems(createdProduct, quotaPools, productItems);
     await onConfigSaved?.(createdProduct.id);
     toast.success("Product created successfully");

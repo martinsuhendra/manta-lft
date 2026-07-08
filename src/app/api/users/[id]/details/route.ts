@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/generated/prisma";
 import { USER_ROLES } from "@/lib/types";
+import { getUserWaiverCompliance } from "@/lib/waiver-settings";
 
 const DETAIL_SECTIONS = ["memberships", "transactions", "bookings", "classSessions"] as const;
 type DetailSection = (typeof DETAIL_SECTIONS)[number];
@@ -35,8 +36,6 @@ const userBaseSelect = {
   phoneNo: true,
   emergencyContact: true,
   emergencyContactName: true,
-  waiverAcceptedAt: true,
-  waiverAcceptedVersion: true,
   birthday: true,
   image: true,
   bio: true,
@@ -190,6 +189,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const waiverCompliance = await getUserWaiverCompliance(id);
+    const userWithWaiver = {
+      ...user,
+      waiverAcceptedAt: waiverCompliance.latestAcceptedAt,
+      hasAcceptedAllWaivers: waiverCompliance.hasAcceptedAllActive,
+      pendingWaiverCount: waiverCompliance.pendingWaivers.length,
+    };
+
     if (includes.length === 0 && user.role === USER_ROLES.TEACHER) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -201,10 +208,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         },
       });
 
-      return NextResponse.json({ ...user, scheduledSessionCount });
+      return NextResponse.json({ ...userWithWaiver, scheduledSessionCount });
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json(userWithWaiver);
   } catch (error) {
     console.error("Failed to fetch user details:", error);
     return NextResponse.json({ error: "Failed to fetch user details" }, { status: 500 });

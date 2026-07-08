@@ -25,7 +25,7 @@ export function MembershipPlans({ products }: MembershipPlansProps) {
             <p className="mt-2 text-sm">Please check back later.</p>
           </div>
         ) : (
-          <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-16 grid max-w-6xl gap-12 md:grid-cols-2 lg:grid-cols-3 xl:max-w-7xl xl:grid-cols-4 xl:gap-8">
             {products.map((product) => (
               <PublicProductCard key={product.id} product={product} />
             ))}

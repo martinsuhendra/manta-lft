@@ -25,6 +25,10 @@ export interface PaymentInvoiceProps {
   transactionId?: string;
   paidAt?: string | Date | null;
   paymentMethod?: string | null;
+  listPrice?: number | null;
+  productDiscountAmount?: number | null;
+  promoDiscountAmount?: number | null;
+  promoCode?: string | null;
 }
 
 export function PaymentInvoice({
@@ -35,11 +39,18 @@ export function PaymentInvoice({
   transactionId,
   paidAt,
   paymentMethod,
+  listPrice,
+  productDiscountAmount,
+  promoDiscountAmount,
+  promoCode,
 }: PaymentInvoiceProps) {
   const invoiceNumber = transactionId ? formatInvoiceNumber(transactionId) : "INV-PREVIEW";
   const paidOn = formatEmailDate(paidAt);
   const total = formatEmailAmount(amount, currency);
   const method = formatPaymentMethod(paymentMethod);
+  const productDiscount = Number(productDiscountAmount ?? 0);
+  const promoDiscount = Number(promoDiscountAmount ?? 0);
+  const subtotal = listPrice != null ? formatEmailAmount(listPrice, currency) : total;
 
   return (
     <Section style={emailInvoiceContainerStyle}>
@@ -103,9 +114,33 @@ export function PaymentInvoice({
               <Text style={{ ...emailInvoiceValueStyle, margin: 0 }}>1</Text>
             </Column>
             <Column align="right" style={{ width: "30%" }}>
-              <Text style={{ ...emailInvoiceValueStyle, margin: 0 }}>{total}</Text>
+              <Text style={{ ...emailInvoiceValueStyle, margin: 0 }}>{subtotal}</Text>
             </Column>
           </Row>
+          {productDiscount > 0 ? (
+            <Row style={{ padding: "8px 14px" }}>
+              <Column style={{ width: "70%" }}>
+                <Text style={{ ...emailInvoiceMutedStyle, margin: 0 }}>Product discount</Text>
+              </Column>
+              <Column align="right" style={{ width: "30%" }}>
+                <Text style={{ ...emailInvoiceMutedStyle, margin: 0 }}>
+                  -{formatEmailAmount(productDiscount, currency)}
+                </Text>
+              </Column>
+            </Row>
+          ) : null}
+          {promoDiscount > 0 ? (
+            <Row style={{ padding: "8px 14px" }}>
+              <Column style={{ width: "70%" }}>
+                <Text style={{ ...emailInvoiceMutedStyle, margin: 0 }}>Promo{promoCode ? ` (${promoCode})` : ""}</Text>
+              </Column>
+              <Column align="right" style={{ width: "30%" }}>
+                <Text style={{ ...emailInvoiceMutedStyle, margin: 0 }}>
+                  -{formatEmailAmount(promoDiscount, currency)}
+                </Text>
+              </Column>
+            </Row>
+          ) : null}
         </Section>
 
         <Hr style={emailInvoiceDividerStyle} />

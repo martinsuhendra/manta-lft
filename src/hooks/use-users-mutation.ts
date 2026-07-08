@@ -35,6 +35,7 @@ interface UpdateUserData {
 
 interface UpdateUserWaiverStatusData {
   userId: string;
+  waiverId: string;
   isAccepted: boolean;
 }
 
@@ -101,8 +102,8 @@ export function useUpdateUserWaiverStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, isAccepted }: UpdateUserWaiverStatusData) => {
-      const response = await axios.patch(`/api/users/${userId}/waiver`, { isAccepted });
+    mutationFn: async ({ userId, waiverId, isAccepted }: UpdateUserWaiverStatusData) => {
+      const response = await axios.patch(`/api/users/${userId}/waiver`, { waiverId, isAccepted });
       return response.data;
     },
     onSuccess: (_, variables) => {

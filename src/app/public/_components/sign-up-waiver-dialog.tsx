@@ -13,7 +13,9 @@ import {
   PublicDialogTitle,
 } from "./public-dialog";
 
-interface PublicWaiverResponse {
+interface PublicWaiverItem {
+  id: string;
+  name: string;
   contentHtml: string;
   version: number;
   isActive: boolean;
@@ -22,7 +24,7 @@ interface PublicWaiverResponse {
 interface SignUpWaiverDialogProps {
   open: boolean;
   isLoading: boolean;
-  waiver: PublicWaiverResponse | null;
+  waivers: PublicWaiverItem[];
   isWaiverConfirmed: boolean;
   onOpenChange: (open: boolean) => void;
   onWaiverConfirmedChange: (confirmed: boolean) => void;
@@ -33,7 +35,7 @@ interface SignUpWaiverDialogProps {
 export function SignUpWaiverDialog({
   open,
   isLoading,
-  waiver,
+  waivers,
   isWaiverConfirmed,
   onOpenChange,
   onWaiverConfirmedChange,
@@ -46,16 +48,22 @@ export function SignUpWaiverDialog({
         <PublicDialogHeader>
           <PublicDialogTitle>Waiver and release of liability</PublicDialogTitle>
           <PublicDialogDescription>
-            Please review and agree to the waiver to complete your registration.
+            Please review and agree to {waivers.length > 1 ? "all waivers" : "the waiver"} to complete your
+            registration.
           </PublicDialogDescription>
         </PublicDialogHeader>
 
         <PublicDialogBody className="space-y-4">
-          <div className="max-h-[55vh] overflow-y-auto rounded-md border p-4">
-            <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: waiver?.contentHtml ?? "" }} />
+          {waivers.map((waiver) => (
+            <div key={waiver.id} className="space-y-2">
+              {waivers.length > 1 ? <h3 className="text-sm font-semibold">{waiver.name}</h3> : null}
+              <div className="max-h-[40vh] overflow-y-auto rounded-md border p-4">
+                <div className="prose prose-sm max-w-none">
+                  <div dangerouslySetInnerHTML={{ __html: waiver.contentHtml }} />
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
 
           <div className="rounded-md border p-3">
             <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -64,7 +72,9 @@ export function SignUpWaiverDialog({
                 onCheckedChange={(value) => onWaiverConfirmedChange(Boolean(value))}
                 className="data-[state=checked]:border-brand-primary data-[state=checked]:bg-brand-primary dark:data-[state=checked]:bg-brand-primary"
               />
-              <span>I have read this waiver and voluntarily agree to its terms.</span>
+              <span>
+                I have read {waivers.length > 1 ? "these waivers" : "this waiver"} and voluntarily agree to their terms.
+              </span>
             </label>
           </div>
         </PublicDialogBody>

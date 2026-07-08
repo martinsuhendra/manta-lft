@@ -2,11 +2,11 @@
 
 import { format } from "date-fns";
 
+import { TransactionDiscountSummary } from "@/components/product-price-display";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useAdminTransactionDetail } from "@/hooks/use-admin-transactions-query";
-import { formatPrice } from "@/lib/utils";
 
 interface TransactionDetailDrawerProps {
   transactionId: string | null;
@@ -56,9 +56,13 @@ export function TransactionDetailDrawer({ transactionId, open, onOpenChange }: T
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Amount</p>
-                  <p className="font-medium">
-                    {formatPrice(data.amount)} {data.currency}
-                  </p>
+                  <TransactionDiscountSummary
+                    listPrice={data.listPrice}
+                    amount={data.amount}
+                    productDiscountAmount={data.productDiscountAmount}
+                    promoDiscountAmount={data.promoDiscountAmount}
+                    promoCode={data.promoCode}
+                  />
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Status</p>

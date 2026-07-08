@@ -4,10 +4,11 @@ import * as React from "react";
 import { AlertTriangle } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
+import { ProductPriceDisplay } from "@/components/product-price-display";
 import { Button } from "@/components/ui/button";
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Stepper } from "@/components/ui/stepper";
-import { formatPrice } from "@/lib/utils";
+import { resolveProductPricing } from "@/lib/checkout-pricing";
 
 import { Item } from "../../admin/items/_components/schema";
 
@@ -120,6 +121,10 @@ function StepContent({
               name={form.watch("name")}
               description={form.watch("description")}
               price={form.watch("price") || 0}
+              isOnSale={form.watch("isOnSale")}
+              salePrice={form.watch("salePrice")}
+              discountStartsAt={form.watch("discountStartsAt")}
+              discountEndsAt={form.watch("discountEndsAt")}
               validDays={form.watch("validDays") || 30}
               image={form.watch("image")}
               whatIsIncluded={form.watch("whatIsIncluded")}
@@ -324,6 +329,24 @@ interface ReviewTabProps {
   setCurrentStep: (step: number) => void;
 }
 
+function ReviewPriceDisplay({ form }: { form: UseFormReturn<FormData> }) {
+  const price = form.watch("price") || 0;
+  const isOnSale = form.watch("isOnSale");
+  const salePrice = form.watch("salePrice");
+  const pricing =
+    isOnSale && salePrice != null ? resolveProductPricing({ price, salePrice }) : resolveProductPricing({ price });
+
+  return (
+    <ProductPriceDisplay
+      listPrice={price}
+      finalPrice={pricing.priceAfterProduct}
+      isOnSale={pricing.isOnSale}
+      discountLabel={pricing.discountLabel}
+      size="sm"
+    />
+  );
+}
+
 function ReviewTab({
   form,
   productItems,
@@ -391,7 +414,7 @@ function ReviewTab({
             </div>
             <div className="bg-muted/30 flex items-center justify-between rounded-md border p-3">
               <span className="text-muted-foreground font-medium">Price:</span>
-              <span className="font-semibold">{formatPrice(form.watch("price") || 0)}</span>
+              <ReviewPriceDisplay form={form} />
             </div>
             <div className="bg-muted/30 flex items-center justify-between rounded-md border p-3">
               <span className="text-muted-foreground font-medium">Valid Days:</span>

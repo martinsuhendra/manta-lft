@@ -9,7 +9,7 @@ import { emailService } from "@/lib/email/service";
 import { prisma } from "@/lib/generated/prisma";
 import { DEFAULT_USER_ROLE } from "@/lib/types";
 import { registerBodySchema } from "@/lib/validators";
-import { getWaiverSettings } from "@/lib/waiver-settings";
+import { acceptAllActiveWaiversForUser, getActiveWaivers } from "@/lib/waiver-settings";
 
 function getClientIp(request: Request): string | null {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -30,11 +30,11 @@ export async function POST(request: Request) {
       emergencyContact,
       emergencyContactName,
       birthday,
-      waiverVersion,
+      waiverAcceptances,
       acceptWaiver,
     } = registerBodySchema.parse(body);
-    const waiver = await getWaiverSettings();
-    const waiverError = validateRegistrationWaiver(waiver, { acceptWaiver, waiverVersion });
+    const activeWaivers = await getActiveWaivers();
+    const waiverError = validateRegistrationWaiver(activeWaivers, { acceptWaiver, waiverAcceptances });
     if (waiverError) {
       return NextResponse.json({ error: waiverError.error }, { status: waiverError.status });
     }
@@ -47,10 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -61,12 +59,16 @@ export async function POST(request: Request) {
         emergencyContactName,
         birthday: new Date(birthday),
         role: DEFAULT_USER_ROLE,
-        waiverAcceptedAt: waiver.isActive ? new Date() : null,
-        waiverAcceptedVersion: waiver.isActive ? waiver.version : null,
-        waiverAcceptedIp: waiver.isActive ? getClientIp(request) : null,
-        waiverAcceptedUserAgent: waiver.isActive ? request.headers.get("user-agent") : null,
       },
     });
+
+    if (activeWaivers.length > 0 && acceptWaiver) {
+      await acceptAllActiveWaiversForUser({
+        userId: user.id,
+        acceptedIp: getClientIp(request),
+        acceptedUserAgent: request.headers.get("user-agent"),
+      });
+    }
 
     const appBase = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "";
     const shopUrl = appBase ? `${appBase}/public` : "#";
@@ -80,7 +82,6 @@ export async function POST(request: Request) {
       }
     });
 
-    // Return user without password
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = user;
     return NextResponse.json({

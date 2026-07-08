@@ -33,6 +33,10 @@ interface FormData {
   whatIsIncluded?: string;
   isActive: boolean;
   isPublic: boolean;
+  isOnSale: boolean;
+  salePrice?: number | null;
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
 }
 
 interface ProductFormFieldsProps {
@@ -56,6 +60,8 @@ export function ProductFormFields({
   const { data: brands = [] } = useBrandsAdmin();
   const activeBrands = React.useMemo(() => brands.filter((brand) => brand.isActive), [brands]);
   const isPurchaseUnlimited = form.watch("isPurchaseUnlimited");
+  const isOnSale = form.watch("isOnSale");
+  const listPrice = form.watch("price") || 0;
 
   React.useEffect(() => {
     if (activeBrands.length !== 1) return;
@@ -234,6 +240,92 @@ export function ProductFormFields({
               </FormItem>
             )}
           />
+        </div>
+        <div className="space-y-4 rounded-md border p-4">
+          <FormField
+            control={form.control}
+            name="isOnSale"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    disabled={mutation.isPending}
+                    onCheckedChange={(checked) => {
+                      const isChecked = checked === true;
+                      field.onChange(isChecked);
+                      if (!isChecked) {
+                        form.setValue("salePrice", null);
+                        form.setValue("discountStartsAt", null);
+                        form.setValue("discountEndsAt", null);
+                      }
+                    }}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>On sale</FormLabel>
+                  <p className="text-muted-foreground text-sm">
+                    Offer a discounted sale price. List price stays as the compare-at price.
+                  </p>
+                </div>
+              </FormItem>
+            )}
+          />
+          {isOnSale ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="salePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sale price (IDR)</FormLabel>
+                    <FormControl>
+                      <CurrencyInput
+                        placeholder="Enter sale price"
+                        value={field.value ?? undefined}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="discountStartsAt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sale starts (optional)</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" value={field.value ?? ""} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="discountEndsAt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sale ends (optional)</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" value={field.value ?? ""} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {typeof form.watch("salePrice") === "number" && form.watch("salePrice")! < listPrice ? (
+                <p className="text-muted-foreground col-span-full text-sm">
+                  Customers pay {Math.round(((listPrice - (form.watch("salePrice") ?? 0)) / listPrice) * 100)}% less
+                  than list price.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <div className="space-y-4 rounded-md border p-4">
           <FormField

@@ -50,11 +50,24 @@ export function createTransactionColumns({
     {
       accessorKey: "amount",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
-      cell: ({ row }) => (
-        <span className="font-medium">
-          {formatPrice(row.original.amount)} {row.original.currency}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const productDiscount = Number(row.original.productDiscountAmount ?? 0);
+        const promoDiscount = Number(row.original.promoDiscountAmount ?? 0);
+        const hasDiscount = productDiscount + promoDiscount > 0;
+
+        return (
+          <div className="space-y-1">
+            <span className="font-medium">
+              {formatPrice(row.original.amount)} {row.original.currency}
+            </span>
+            {hasDiscount ? (
+              <StatusBadge variant="outline" className="text-xs">
+                Discounted
+              </StatusBadge>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",

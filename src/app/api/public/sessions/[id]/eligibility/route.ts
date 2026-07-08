@@ -16,7 +16,7 @@ import { getCapacityBookingStatuses } from "@/lib/booking-status";
 import { prisma } from "@/lib/generated/prisma";
 import { resolveEligibleMembershipsForItem } from "@/lib/session-booking-eligibility";
 import { USER_ROLES } from "@/lib/types";
-import { getWaiverSettings, hasAcceptedCurrentWaiver } from "@/lib/waiver-settings";
+import { hasUserAcceptedAllActiveWaivers } from "@/lib/waiver-settings";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -80,6 +80,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const alreadyBooked = !!existingBooking && existingBooking.status !== "CANCELLED";
     const bookingId = alreadyBooked ? existingBooking.id : undefined;
 
+    const { _sum } = await prisma.booking.aggregate({
+      where: {
+        classSessionId: sessionId,
+        status: { in: getCapacityBookingStatuses() },
+      },
+      _sum: { participantCount: true },
+    });
+    const totalSlots = _sum.participantCount ?? 0;
+    const spotsLeft = Math.max(0, classSession.item.capacity - totalSlots);
+
     if (alreadyBooked) {
       const settings = await getBookingSettings(selectedBrandId);
       const sessionStartAt = getSessionStartAt({
@@ -94,6 +104,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         bookingId,
         canCancel,
         cancelDeadline: cancelDeadline.toISOString(),
+        spotsLeft,
         eligibleMemberships: [],
         reason: "You are already booked for this session",
       });
@@ -108,44 +119,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({
         canJoin: false,
         alreadyBooked: false,
+        spotsLeft,
         eligibleMemberships: [],
         reason: "Booking for this session has closed.",
       });
     }
 
-    const { _sum } = await prisma.booking.aggregate({
-      where: {
-        classSessionId: sessionId,
-        status: { in: getCapacityBookingStatuses() },
-      },
-      _sum: { participantCount: true },
-    });
-    const totalSlots = _sum.participantCount ?? 0;
-    const spotsLeft = Math.max(0, classSession.item.capacity - totalSlots);
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        waiverAcceptedVersion: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const waiver = await getWaiverSettings();
-    if (
-      waiver.isActive &&
-      !hasAcceptedCurrentWaiver({
-        acceptedVersion: user.waiverAcceptedVersion,
-        waiverVersion: waiver.version,
-      })
-    ) {
+    const hasAcceptedAllWaivers = await hasUserAcceptedAllActiveWaivers(userId);
+    if (!hasAcceptedAllWaivers) {
       return NextResponse.json({
         canJoin: false,
         alreadyBooked: false,
+        spotsLeft,
         eligibleMemberships: [],
         reason: "Waiver not accepted",
       });
@@ -175,6 +160,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({
         canJoin: false,
         alreadyBooked: false,
+        spotsLeft,
         eligibleMemberships: [],
         reason: "No eligible membership for this class",
       });

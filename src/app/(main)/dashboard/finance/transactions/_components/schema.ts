@@ -70,6 +70,10 @@ export interface TransactionListItem extends Record<string, unknown> {
   paidAt: string | null;
   createdAt: string;
   updatedAt: string;
+  listPrice?: number | null;
+  productDiscountAmount?: number | null;
+  promoDiscountAmount?: number | null;
+  promoCode?: string | null;
 }
 
 export interface TransactionMembershipSummary {

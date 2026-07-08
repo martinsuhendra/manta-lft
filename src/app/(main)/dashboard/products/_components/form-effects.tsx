@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 
 import { UseFormReturn } from "react-hook-form";
 
-import { FormData, DEFAULT_FORM_VALUES } from "./hooks/use-form-validation";
+import { FormData, DEFAULT_FORM_VALUES, toDatetimeLocalValue } from "./hooks/use-form-validation";
 import { Product, CreateProductItemForm, QuotaPool, ProductItem } from "./schema";
 
 function mapProductToFormValues(product: Product): FormData {
@@ -21,6 +21,10 @@ function mapProductToFormValues(product: Product): FormData {
     whatIsIncluded: product.whatIsIncluded || "",
     isActive: product.isActive,
     isPublic: product.isPublic,
+    isOnSale: product.salePrice != null,
+    salePrice: product.salePrice ?? null,
+    discountStartsAt: toDatetimeLocalValue(product.discountStartsAt ?? null),
+    discountEndsAt: toDatetimeLocalValue(product.discountEndsAt ?? null),
   };
 }
 

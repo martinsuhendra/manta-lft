@@ -96,6 +96,12 @@ export interface TransactionMetadata {
   snapTokenCreatedAt?: string;
   midtransNotification?: MidtransNotification;
   lastWebhookAt?: string;
+  pricingSnapshot?: {
+    listPrice?: number;
+    productDiscountAmount?: number;
+    promoDiscountAmount?: number;
+    promoCode?: string | null;
+  };
 }
 
 export interface SnapTokenMetadata {

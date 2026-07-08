@@ -12,10 +12,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { ProductPriceDisplay } from "@/components/product-price-display";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useMemberBookingCache } from "@/hooks/use-member-booking-cache";
+import { resolveProductPricing } from "@/lib/checkout-pricing";
 import { useMidtransSnap } from "@/lib/hooks/use-midtrans-snap";
 import { formatPrice } from "@/lib/utils";
 
@@ -36,12 +38,24 @@ export interface PublicProduct {
   name: string;
   description: string | null;
   price: number;
+  salePrice?: number | null;
+  finalPrice?: number;
+  isOnSale?: boolean;
+  discountLabel?: string | null;
   validDays: number;
   image: string | null;
   paymentUrl: string | null;
   whatIsIncluded: string | null;
   features: string[];
   createdAt: string;
+}
+
+interface PromoPreview {
+  listPrice: number;
+  productDiscountAmount: number;
+  promoDiscountAmount: number;
+  finalAmount: number;
+  promoCode: string | null;
 }
 
 interface PublicProductCardProps {
@@ -59,6 +73,10 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isPurchasing, setIsPurchasing] = React.useState(false);
+  const [promoInput, setPromoInput] = React.useState("");
+  const [appliedPromo, setAppliedPromo] = React.useState<string | null>(null);
+  const [promoPreview, setPromoPreview] = React.useState<PromoPreview | null>(null);
+  const [isApplyingPromo, setIsApplyingPromo] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   const { data: session } = useSession();
 
@@ -92,6 +110,61 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
     }
   }, [isDialogOpen, session, form]);
 
+  const listPrice = product.price;
+  const productFinalPrice = product.finalPrice ?? product.price;
+
+  const salePrice = product.salePrice ?? null;
+  const hasConfiguredSale = salePrice != null && salePrice < listPrice;
+  const configuredSalePricing = hasConfiguredSale ? resolveProductPricing({ price: listPrice, salePrice }) : null;
+  const displayIsOnSale = Boolean(configuredSalePricing?.isOnSale);
+  const displayFinalPrice = configuredSalePricing?.priceAfterProduct ?? productFinalPrice;
+  const displayDiscountLabel = configuredSalePricing?.discountLabel ?? product.discountLabel;
+
+  const checkoutTotal = promoPreview?.finalAmount ?? productFinalPrice;
+  const isFreeCheckout = checkoutTotal === 0;
+
+  React.useEffect(() => {
+    if (!isDialogOpen) {
+      setPromoInput("");
+      setAppliedPromo(null);
+      setPromoPreview(null);
+    }
+  }, [isDialogOpen]);
+
+  const handleApplyPromo = async () => {
+    const code = promoInput.trim();
+    if (!code) return;
+
+    setIsApplyingPromo(true);
+    try {
+      const response = await fetch("/api/public/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, promoCode: code }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.error || "Invalid promo code");
+        setAppliedPromo(null);
+        setPromoPreview(null);
+        return;
+      }
+      setAppliedPromo(result.promoCode);
+      setPromoPreview({
+        listPrice: result.listPrice,
+        productDiscountAmount: result.productDiscountAmount,
+        promoDiscountAmount: result.promoDiscountAmount,
+        finalAmount: result.finalAmount,
+        promoCode: result.promoCode,
+      });
+      toast.success("Promo applied");
+    } catch {
+      toast.error("Failed to validate promo code");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
   const handlePurchase = async (data: PurchaseFormValues) => {
     setIsPurchasing(true);
     try {
@@ -104,6 +177,7 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
           productId: product.id,
           customerEmail: data.customerEmail,
           customerName: data.customerName,
+          promoCode: appliedPromo ?? undefined,
         }),
       });
 
@@ -214,7 +288,14 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
         )}
 
         <div className="mb-4 flex items-baseline justify-between gap-2 sm:mb-6 md:mb-8">
-          <span className="text-brand-accent text-2xl font-black tracking-tight">{formatPrice(product.price)}</span>
+          <ProductPriceDisplay
+            listPrice={listPrice}
+            finalPrice={displayFinalPrice}
+            isOnSale={displayIsOnSale}
+            discountLabel={displayDiscountLabel}
+            size="lg"
+            className="text-brand-accent [&_span]:text-brand-accent"
+          />
         </div>
 
         {product.features.length > 0 && (
@@ -318,12 +399,49 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
                           </FormItem>
                         )}
                       />
-                      <div className="bg-muted rounded-lg p-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Total</span>
-                          <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Promo code"
+                            value={promoInput}
+                            onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                            disabled={isPurchasing}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleApplyPromo}
+                            disabled={isApplyingPromo || isPurchasing || !promoInput.trim()}
+                          >
+                            {isApplyingPromo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                          </Button>
                         </div>
-                        <p className="text-muted-foreground mt-2 text-xs">
+                        <div className="bg-muted space-y-2 rounded-lg p-4 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">List price</span>
+                            <span>{formatPrice(promoPreview?.listPrice ?? listPrice)}</span>
+                          </div>
+                          {(promoPreview?.productDiscountAmount ?? 0) > 0 ||
+                          (product.isOnSale && productFinalPrice < listPrice) ? (
+                            <div className="flex justify-between text-green-700 dark:text-green-400">
+                              <span>Product discount</span>
+                              <span>
+                                -{formatPrice(promoPreview?.productDiscountAmount ?? listPrice - productFinalPrice)}
+                              </span>
+                            </div>
+                          ) : null}
+                          {(promoPreview?.promoDiscountAmount ?? 0) > 0 ? (
+                            <div className="flex justify-between text-green-700 dark:text-green-400">
+                              <span>Promo{appliedPromo ? ` (${appliedPromo})` : ""}</span>
+                              <span>-{formatPrice(promoPreview!.promoDiscountAmount)}</span>
+                            </div>
+                          ) : null}
+                          <div className="flex items-center justify-between border-t pt-2 font-bold">
+                            <span>Total</span>
+                            <span className="text-lg">{formatPrice(checkoutTotal)}</span>
+                          </div>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
                           Valid for {product.validDays} days from purchase date
                         </p>
                       </div>
@@ -337,18 +455,18 @@ export function PublicProductCard({ product }: PublicProductCardProps) {
                       >
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={isPurchasing || (product.price > 0 && !isSnapLoaded)}>
+                      <Button type="submit" disabled={isPurchasing || (!isFreeCheckout && !isSnapLoaded)}>
                         {isPurchasing ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Processing...
                           </>
-                        ) : product.price > 0 && !isSnapLoaded ? (
+                        ) : !isFreeCheckout && !isSnapLoaded ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Loading Payment...
                           </>
-                        ) : product.price > 0 ? (
+                        ) : !isFreeCheckout ? (
                           "Continue to Payment"
                         ) : (
                           "Activate Free Trial"

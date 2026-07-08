@@ -38,6 +38,20 @@ import { USER_ROLES, USER_ROLE_LABELS, getRoleVariant } from "@/lib/types";
 
 import { Member, MemberDetails } from "./schema";
 
+interface PublicWaiverItem {
+  id: string;
+  name: string;
+  contentHtml: string;
+  version: number;
+  isActive: boolean;
+}
+
+interface MemberWaiverStatusItem extends PublicWaiverItem {
+  hasAccepted: boolean;
+  acceptedVersion: number | null;
+  acceptedAt: string | null;
+}
+
 interface OverviewTabProps {
   member: Member;
   memberDetails?: MemberDetails | (MemberDetails & { classSessions?: unknown[] }) | null;
@@ -69,13 +83,18 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [sendingLinkType, setSendingLinkType] = useState<"waiver" | null>(null);
   const [isWaiverDialogOpen, setIsWaiverDialogOpen] = useState(false);
-  const [isWaiverAgreed, setIsWaiverAgreed] = useState(false);
+  const [waiverAgreements, setWaiverAgreements] = useState<Record<string, boolean>>({});
   const updateWaiverStatus = useUpdateUserWaiverStatus();
   const waiverLink = useMemo(() => buildWaiverLink({ userId: member.id }), [member.id]);
+  const hasAcceptedAllWaivers = memberDetails?.hasAcceptedAllWaivers ?? Boolean(memberDetails?.waiverAcceptedAt);
 
   const { data: waiverData, isLoading: isWaiverLoading } = useQuery<{
-    waiver: { contentHtml: string; version: number; isActive: boolean };
-    member: { waiverAcceptedAt: string | null; waiverAcceptedVersion: number | null };
+    waivers: Array<PublicWaiverItem>;
+    member: {
+      waivers: MemberWaiverStatusItem[];
+      hasAcceptedAll: boolean;
+      pendingWaivers: PublicWaiverItem[];
+    };
   }>({
     queryKey: ["user-waiver", member.id],
     queryFn: async () => {
@@ -88,7 +107,11 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
 
   useEffect(() => {
     if (!waiverData) return;
-    setIsWaiverAgreed(Boolean(waiverData.member.waiverAcceptedAt));
+    const nextAgreements: Record<string, boolean> = {};
+    for (const waiver of waiverData.member.waivers) {
+      nextAgreements[waiver.id] = waiver.hasAccepted;
+    }
+    setWaiverAgreements(nextAgreements);
   }, [waiverData]);
 
   const handleSendResetLink = async () => {
@@ -209,16 +232,27 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
   const image = teacherDetails?.image ?? (member as Member & { image?: string }).image;
   const bio = teacherDetails?.bio ?? (member as Member & { bio?: string }).bio;
 
-  const handleSaveWaiverStatus = () => {
-    updateWaiverStatus.mutate(
-      { userId: member.id, isAccepted: isWaiverAgreed },
-      {
-        onSuccess: () => {
-          toast.success(isWaiverAgreed ? "Waiver marked as agreed" : "Waiver agreement removed");
-          setIsWaiverDialogOpen(false);
-        },
-      },
-    );
+  const handleSaveWaiverStatus = async () => {
+    if (!waiverData) return;
+
+    const updates = waiverData.member.waivers.filter((waiver) => {
+      const nextAccepted = Boolean(waiverAgreements[waiver.id]);
+      return nextAccepted !== waiver.hasAccepted;
+    });
+
+    try {
+      for (const waiver of updates) {
+        await updateWaiverStatus.mutateAsync({
+          userId: member.id,
+          waiverId: waiver.id,
+          isAccepted: Boolean(waiverAgreements[waiver.id]),
+        });
+      }
+      toast.success("Waiver status updated");
+      setIsWaiverDialogOpen(false);
+    } catch {
+      // toast handled in mutation
+    }
   };
 
   return (
@@ -337,14 +371,14 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
                 variant="outline"
                 size="sm"
                 className={
-                  memberDetails?.waiverAcceptedAt && memberDetails.waiverAcceptedVersion
+                  hasAcceptedAllWaivers
                     ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300 dark:hover:bg-green-950/60"
                     : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60"
                 }
                 onClick={() => setIsWaiverDialogOpen(true)}
               >
                 <FileSignature className="mr-2 h-4 w-4" />
-                {memberDetails?.waiverAcceptedAt && memberDetails.waiverAcceptedVersion ? `Accepted` : "Not accepted"}
+                {hasAcceptedAllWaivers ? "All accepted" : "Pending acceptance"}
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -372,10 +406,10 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
             </div>
             {memberDetails?.waiverAcceptedAt ? (
               <p className="text-muted-foreground mt-1 text-sm">
-                Accepted on {format(new Date(memberDetails.waiverAcceptedAt), "MMMM dd, yyyy")}
+                All active waivers accepted on {format(new Date(memberDetails.waiverAcceptedAt), "MMMM dd, yyyy")}
               </p>
             ) : (
-              <p className="text-muted-foreground mt-1 text-sm">Open to view waiver and update agreement status.</p>
+              <p className="text-muted-foreground mt-1 text-sm">Open to review active waivers and update status.</p>
             )}
           </div>
 
@@ -419,25 +453,31 @@ export function OverviewTab({ member, memberDetails }: OverviewTabProps) {
               Loading waiver...
             </div>
           ) : (
-            <>
-              <div className="max-h-[55vh] overflow-y-auto rounded-md border p-4">
-                <div className="prose prose-sm max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: waiverData?.waiver.contentHtml ?? "" }} />
+            <div className="max-h-[55vh] space-y-4 overflow-y-auto">
+              {(waiverData?.member.waivers ?? []).map((waiver) => (
+                <div key={waiver.id} className="space-y-3 rounded-md border p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-medium">{waiver.name}</h3>
+                    <span className="text-muted-foreground text-xs">v{waiver.version}</span>
+                  </div>
+                  <div className="prose prose-sm max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: waiver.contentHtml }} />
+                  </div>
+                  <label className="flex items-start gap-3 text-sm">
+                    <Checkbox
+                      checked={Boolean(waiverAgreements[waiver.id])}
+                      onCheckedChange={(value) =>
+                        setWaiverAgreements((current) => ({
+                          ...current,
+                          [waiver.id]: Boolean(value),
+                        }))
+                      }
+                    />
+                    <span>Mark this member as agreed to the current version.</span>
+                  </label>
                 </div>
-              </div>
-
-              <div className="rounded-md border p-3">
-                <label className="flex items-start gap-3 text-sm">
-                  <Checkbox checked={isWaiverAgreed} onCheckedChange={(value) => setIsWaiverAgreed(Boolean(value))} />
-                  <span>Mark this member as agreed to the current waiver version.</span>
-                </label>
-                {waiverData?.waiver.version ? (
-                  <p className="text-muted-foreground mt-2 text-xs">
-                    Current waiver version: v{waiverData.waiver.version}
-                  </p>
-                ) : null}
-              </div>
-            </>
+              ))}
+            </div>
           )}
 
           <DialogFooter>

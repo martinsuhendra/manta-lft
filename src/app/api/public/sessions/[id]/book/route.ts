@@ -14,7 +14,7 @@ import { prisma } from "@/lib/generated/prisma";
 import { deductQuota } from "@/lib/quota-utils";
 import { resolveEligibleMembershipsForItem } from "@/lib/session-booking-eligibility";
 import { USER_ROLES } from "@/lib/types";
-import { getWaiverSettings, hasAcceptedCurrentWaiver } from "@/lib/waiver-settings";
+import { hasUserAcceptedAllActiveWaivers } from "@/lib/waiver-settings";
 
 const bookSchema = z.object({
   membershipId: z.string().uuid("Invalid membership ID"),
@@ -101,14 +101,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: "You must have a member account to book" }, { status: 400 });
     }
 
-    const waiver = await getWaiverSettings();
-    if (
-      waiver.isActive &&
-      !hasAcceptedCurrentWaiver({
-        acceptedVersion: user.waiverAcceptedVersion,
-        waiverVersion: waiver.version,
-      })
-    ) {
+    const hasAcceptedAllWaivers = await hasUserAcceptedAllActiveWaivers(userId);
+    if (!hasAcceptedAllWaivers) {
       return NextResponse.json({ error: "Waiver not accepted" }, { status: 400 });
     }
 

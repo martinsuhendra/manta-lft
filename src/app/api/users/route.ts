@@ -9,6 +9,7 @@ import { parseCloudinaryAsset, resolveAssetUrl } from "@/lib/cloudinary-asset";
 import { prisma } from "@/lib/generated/prisma";
 import { assertRoleAssignmentAllowed } from "@/lib/rbac";
 import { USER_ROLES, DEFAULT_USER_ROLE } from "@/lib/types";
+import { enrichUsersWithWaiverSummary } from "@/lib/waiver-settings";
 
 function normalizePhoneNumber(value: string) {
   return value.replace(/\D/g, "");
@@ -73,8 +74,6 @@ const userListSelect = {
   phoneNo: true,
   emergencyContact: true,
   emergencyContactName: true,
-  waiverAcceptedAt: true,
-  waiverAcceptedVersion: true,
   birthday: true,
   createdAt: true,
   updatedAt: true,
@@ -94,8 +93,6 @@ const legacyUserListSelect = {
   role: true,
   phoneNo: true,
   emergencyContact: true,
-  waiverAcceptedAt: true,
-  waiverAcceptedVersion: true,
   birthday: true,
   createdAt: true,
   updatedAt: true,
@@ -171,8 +168,10 @@ export async function GET(request: NextRequest) {
       total = count;
     }
 
+    const enrichedUsers = await enrichUsersWithWaiverSummary(users as Array<{ id: string }>);
+
     return NextResponse.json({
-      data: users,
+      data: enrichedUsers,
       pagination: {
         page,
         limit,

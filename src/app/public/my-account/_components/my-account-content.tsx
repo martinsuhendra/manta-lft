@@ -72,6 +72,10 @@ interface AccountData {
       currency: string;
       paidAt: string | null;
       createdAt: string;
+      listPrice?: number | null;
+      productDiscountAmount?: number | null;
+      promoDiscountAmount?: number | null;
+      promoCode?: string | null;
     } | null;
   }>;
   frozenMemberships: Array<{
@@ -116,6 +120,10 @@ interface AccountData {
       currency: string;
       paidAt: string | null;
       createdAt: string;
+      listPrice?: number | null;
+      productDiscountAmount?: number | null;
+      promoDiscountAmount?: number | null;
+      promoCode?: string | null;
     } | null;
   }>;
   purchaseHistory: Array<{
@@ -127,6 +135,10 @@ interface AccountData {
     paymentProvider: string | null;
     paidAt: string | null;
     createdAt: string;
+    listPrice?: number | null;
+    productDiscountAmount?: number | null;
+    promoDiscountAmount?: number | null;
+    promoCode?: string | null;
     product: {
       id: string;
       name: string;
@@ -474,7 +486,7 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
         </div>
 
         {/* Stats Quick Grid */}
-        <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="border-border bg-card rounded-2xl border p-6">
             <p className="text-muted-foreground mb-1 text-xs font-bold tracking-widest uppercase">Total Classes</p>
             <p className="text-primary text-3xl font-black">{totalClasses}</p>
@@ -482,10 +494,6 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
           <div className="border-border bg-card rounded-2xl border p-6">
             <p className="text-muted-foreground mb-1 text-xs font-bold tracking-widest uppercase">This Month</p>
             <p className="text-primary text-3xl font-black">{thisMonth}</p>
-          </div>
-          <div className="border-border bg-card rounded-2xl border p-6">
-            <p className="text-muted-foreground mb-1 text-xs font-bold tracking-widest uppercase">WOD PB</p>
-            <p className="text-primary text-3xl font-black">—</p>
           </div>
         </div>
 
@@ -546,8 +554,21 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                           </div>
                           <div className="w-full border-t pt-6 text-center md:w-auto md:border-t-0 md:border-l md:pt-0 md:pl-10 md:text-right">
                             <p className="text-foreground text-2xl font-black">
-                              {formatPrice(membership.product.price)}
+                              {formatPrice(membership.transaction?.amount ?? membership.product.price)}
                             </p>
+                            {membership.transaction &&
+                            Number(membership.transaction.productDiscountAmount ?? 0) +
+                              Number(membership.transaction.promoDiscountAmount ?? 0) >
+                              0 ? (
+                              <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+                                Saved{" "}
+                                {formatPrice(
+                                  Number(membership.transaction.productDiscountAmount ?? 0) +
+                                    Number(membership.transaction.promoDiscountAmount ?? 0),
+                                )}
+                                {membership.transaction.promoCode ? ` · ${membership.transaction.promoCode}` : ""}
+                              </p>
+                            ) : null}
                             <p className="text-muted-foreground text-xs font-bold uppercase">
                               per {membership.product.validDays} days
                             </p>
@@ -729,6 +750,15 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                               )}
                             </div>
                             <p className="text-primary font-black">{formatPrice(inv.amount)}</p>
+                            {Number(inv.productDiscountAmount ?? 0) + Number(inv.promoDiscountAmount ?? 0) > 0 ? (
+                              <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+                                Saved{" "}
+                                {formatPrice(
+                                  Number(inv.productDiscountAmount ?? 0) + Number(inv.promoDiscountAmount ?? 0),
+                                )}
+                                {inv.promoCode ? ` · ${inv.promoCode}` : ""}
+                              </p>
+                            ) : null}
                           </div>
                           <div className="text-muted-foreground flex items-center justify-between text-xs">
                             <span>{formatDateShort(inv.createdAt)}</span>
@@ -794,7 +824,20 @@ export function MyAccountContent({ accountData }: MyAccountContentProps) {
                                   )}
                                 </div>
                               </td>
-                              <td className="text-primary py-4 text-sm font-black">{formatPrice(inv.amount)}</td>
+                              <td className="text-primary py-4 text-sm font-black">
+                                <div>
+                                  <p>{formatPrice(inv.amount)}</p>
+                                  {Number(inv.productDiscountAmount ?? 0) + Number(inv.promoDiscountAmount ?? 0) > 0 ? (
+                                    <p className="text-xs font-normal text-green-600 dark:text-green-400">
+                                      Saved{" "}
+                                      {formatPrice(
+                                        Number(inv.productDiscountAmount ?? 0) + Number(inv.promoDiscountAmount ?? 0),
+                                      )}
+                                      {inv.promoCode ? ` · ${inv.promoCode}` : ""}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </td>
                               <td className="py-4 text-right">
                                 {inv.status === "PENDING" ? (
                                   <button

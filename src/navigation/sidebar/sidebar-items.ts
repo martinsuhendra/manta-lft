@@ -13,6 +13,7 @@ import {
   Users,
   Wallet,
   ReceiptText,
+  TicketPercent,
   type LucideIcon,
 } from "lucide-react";
 
@@ -140,6 +141,12 @@ export const sidebarItems: NavGroup[] = [
         icon: ReceiptText,
         requiredRoles: [...RBAC_ADMIN_ROLES],
       },
+      {
+        title: "Promo codes",
+        url: "/dashboard/finance/promo-codes",
+        icon: TicketPercent,
+        requiredRoles: [...RBAC_ADMIN_ROLES],
+      },
     ],
   },
   {
@@ -167,7 +174,7 @@ export const sidebarItems: NavGroup[] = [
         requiredRoles: [...RBAC_ADMIN_ROLES],
       },
       {
-        title: "Waiver",
+        title: "Waivers",
         url: "/dashboard/settings/waiver-content",
         icon: FileText,
         comingSoon: false,

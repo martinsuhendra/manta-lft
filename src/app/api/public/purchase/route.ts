@@ -12,12 +12,14 @@ import {
   TRANSACTION_STATUS,
   type TransactionMetadata,
 } from "@/lib/midtrans";
+import { buildTransactionPricingData, recordPromoRedemption, resolvePurchasePricing } from "@/lib/purchase-pricing";
 import { DEFAULT_USER_ROLE } from "@/lib/types";
 
 const purchaseSchema = z.object({
   productId: z.string().uuid("Invalid product ID"),
   customerEmail: z.string().email("Invalid email address"),
   customerName: z.string().min(1, "Name is required").optional(),
+  promoCode: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -25,7 +27,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = purchaseSchema.parse(body);
 
-    // Validate product exists and is active
     const product = await prisma.product.findUnique({
       where: { id: validatedData.productId },
       include: {
@@ -54,13 +55,11 @@ export async function POST(request: NextRequest) {
     const primaryBrandId =
       cookieBrandId && productBrandIds.includes(cookieBrandId) ? cookieBrandId : productBrandIds[0];
 
-    // Find or create user
     let user = await prisma.user.findUnique({
       where: { email: validatedData.customerEmail },
     });
 
     if (!user) {
-      // Create user without password - they can set it later via password reset
       user = await prisma.user.create({
         data: {
           email: validatedData.customerEmail,
@@ -85,60 +84,90 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isFreePurchase = Number(product.price) === 0;
-
-    // Create transaction
-    const transaction = await prisma.transaction.create({
-      data: {
-        userId: user.id,
+    let pricing;
+    try {
+      pricing = await resolvePurchasePricing({
+        product,
         productId: validatedData.productId,
         brandId: primaryBrandId,
-        amount: product.price,
-        currency: "IDR", // Midtrans requires IDR
-        status: isFreePurchase ? TRANSACTION_STATUS.COMPLETED : TRANSACTION_STATUS.PENDING,
-        paymentProvider: isFreePurchase ? "none" : "midtrans",
-        paymentMethod: isFreePurchase ? "FREE_TRIAL" : null,
-        paidAt: isFreePurchase ? new Date() : null,
-        metadata: {
-          customerEmail: validatedData.customerEmail,
-          customerName: validatedData.customerName || user.name,
-        },
-      },
-    });
-
-    // Calculate expiration date
-    const expiredAt = new Date();
-    expiredAt.setDate(expiredAt.getDate() + product.validDays);
-
-    // Create membership with PENDING status until payment is confirmed
-    const membership = await prisma.membership.create({
-      data: {
         userId: user.id,
-        productId: validatedData.productId,
-        expiredAt,
-        transactionId: transaction.id,
-        status: isFreePurchase ? MEMBERSHIP_STATUS.ACTIVE : MEMBERSHIP_STATUS.PENDING,
-        membershipBrands: {
-          create: productBrandIds.map((brandId) => ({ brandId })),
-        },
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            validDays: true,
-            paymentUrl: true,
+        promoCode: validatedData.promoCode,
+      });
+    } catch (error) {
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid pricing" }, { status: 400 });
+    }
+
+    const isFreePurchase = pricing.finalAmount === 0;
+    const pricingData = buildTransactionPricingData(pricing);
+
+    const { transaction, membership } = await prisma.$transaction(async (tx) => {
+      const createdTransaction = await tx.transaction.create({
+        data: {
+          userId: user.id,
+          productId: validatedData.productId,
+          brandId: primaryBrandId,
+          currency: "IDR",
+          status: isFreePurchase ? TRANSACTION_STATUS.COMPLETED : TRANSACTION_STATUS.PENDING,
+          paymentProvider: isFreePurchase ? "none" : "midtrans",
+          paymentMethod: isFreePurchase ? "FREE_TRIAL" : null,
+          paidAt: isFreePurchase ? new Date() : null,
+          amount: pricingData.amount,
+          listPrice: pricingData.listPrice,
+          productDiscountAmount: pricingData.productDiscountAmount,
+          promoDiscountAmount: pricingData.promoDiscountAmount,
+          promoCode: pricingData.promoCode,
+          promoCodeId: pricingData.promoCodeId,
+          metadata: {
+            customerEmail: validatedData.customerEmail,
+            customerName: validatedData.customerName || user.name,
           },
         },
-        membershipBrands: {
-          select: {
-            brandId: true,
-            brand: { select: { id: true, name: true } },
+      });
+
+      if (pricingData.promoCodeId && pricing.promoDiscountAmount > 0) {
+        await recordPromoRedemption({
+          tx,
+          promoCodeId: pricingData.promoCodeId,
+          userId: user.id,
+          transactionId: createdTransaction.id,
+          discountAmount: pricing.promoDiscountAmount,
+        });
+      }
+
+      const expiredAt = new Date();
+      expiredAt.setDate(expiredAt.getDate() + product.validDays);
+
+      const createdMembership = await tx.membership.create({
+        data: {
+          userId: user.id,
+          productId: validatedData.productId,
+          expiredAt,
+          transactionId: createdTransaction.id,
+          status: isFreePurchase ? MEMBERSHIP_STATUS.ACTIVE : MEMBERSHIP_STATUS.PENDING,
+          membershipBrands: {
+            create: productBrandIds.map((brandId) => ({ brandId })),
           },
         },
-      },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              validDays: true,
+              paymentUrl: true,
+            },
+          },
+          membershipBrands: {
+            select: {
+              brandId: true,
+              brand: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+
+      return { transaction: createdTransaction, membership: createdMembership };
     });
 
     if (isFreePurchase) {
@@ -166,12 +195,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Midtrans Snap token
     let snapToken: string | null = null;
     try {
       const snapResponse = await createSnapTransaction({
         transactionId: transaction.id,
-        amount: Number(product.price),
+        amount: Number(transaction.amount),
         customerName: validatedData.customerName || user.name || "Customer",
         customerEmail: validatedData.customerEmail,
         customerPhone: user.phoneNo || undefined,
@@ -181,7 +209,6 @@ export async function POST(request: NextRequest) {
 
       snapToken = snapResponse.token;
 
-      // Store snap token in transaction metadata
       const updatedMetadata: TransactionMetadata = {
         ...(transaction.metadata as TransactionMetadata),
         snapToken: snapResponse.token,
@@ -194,8 +221,6 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       console.error("Failed to create Snap token:", error);
-      // Return error but don't fail the entire request
-      // Transaction and membership are created, user can retry later
       return NextResponse.json(
         {
           error: "Failed to initialize payment gateway",

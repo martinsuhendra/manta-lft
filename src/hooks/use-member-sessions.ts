@@ -64,15 +64,21 @@ export interface SessionEligibility {
   reason?: string;
 }
 
-export interface MemberWaiver {
-  waiver: {
-    contentHtml: string;
-    version: number;
-    isActive: boolean;
-  };
+export interface MemberWaiverItem {
+  id: string;
+  name: string;
+  contentHtml: string;
+  version: number;
+  isActive: boolean;
   hasAccepted: boolean;
-  acceptedAt?: string | null;
-  acceptedVersion?: number | null;
+  acceptedVersion: number | null;
+  acceptedAt: string | null;
+}
+
+export interface MemberWaiver {
+  waivers: MemberWaiverItem[];
+  hasAcceptedAll: boolean;
+  pendingWaivers: Array<Pick<MemberWaiverItem, "id" | "name" | "contentHtml" | "version" | "isActive">>;
 }
 
 export function useMemberSessions(filters?: MemberSessionFilters) {
@@ -155,8 +161,8 @@ export function useAcceptMemberWaiver() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (version: number) => {
-      const { data } = await axios.post("/api/public/waiver/accept", { version });
+    mutationFn: async (input?: { waiverId?: string; version?: number }) => {
+      const { data } = await axios.post("/api/public/waiver/accept", input ?? {});
       return data;
     },
     onSuccess: () => {
@@ -183,8 +189,33 @@ export function useMemberBookSession() {
       const { data } = await axios.post(`/api/public/sessions/${sessionId}/book`, { membershipId });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       const keys = getMemberBookingQueryKeys(activeBrandId);
+      const { sessionId } = variables;
+      const slotsUsed =
+        data && typeof data === "object" && "participantCount" in data && typeof data.participantCount === "number"
+          ? data.participantCount
+          : 1;
+
+      // Optimistically decrement spotsLeft so the list updates before refetch lands.
+      queryClient.setQueriesData<MemberSession[]>({ queryKey: keys.memberSessions }, (prev) => {
+        if (!prev) return prev;
+        return prev.map((s) => (s.id === sessionId ? { ...s, spotsLeft: Math.max(0, s.spotsLeft - slotsUsed) } : s));
+      });
+
+      queryClient.setQueriesData<SessionEligibility>({ queryKey: [...keys.sessionEligibility, sessionId] }, (prev) => {
+        if (!prev) return prev;
+        const nextSpots = prev.spotsLeft != null ? Math.max(0, prev.spotsLeft - slotsUsed) : prev.spotsLeft;
+        return {
+          ...prev,
+          canJoin: false,
+          alreadyBooked: true,
+          spotsLeft: nextSpots,
+          eligibleMemberships: [],
+          reason: "You are already booked for this session",
+        };
+      });
+
       void queryClient.refetchQueries({ queryKey: keys.memberSessions });
       void queryClient.refetchQueries({ queryKey: keys.sessionEligibility });
       void queryClient.invalidateQueries({ queryKey: keys.myAccount });
@@ -208,6 +239,7 @@ export function useMemberCancelBooking() {
     },
     onSuccess: () => {
       const keys = getMemberBookingQueryKeys(activeBrandId);
+      // Refetch only — cancel may promote waitlist, so spotsLeft is not a simple +1.
       void queryClient.refetchQueries({ queryKey: keys.memberSessions });
       void queryClient.refetchQueries({ queryKey: keys.sessionEligibility });
       void queryClient.invalidateQueries({ queryKey: keys.myAccount });

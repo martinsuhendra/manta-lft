@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Calendar, Clock, Banknote, Package, Settings } from "lucide-react";
 
+import { ProductPriceDisplay } from "@/components/product-price-display";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,7 +23,6 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatPrice } from "@/lib/utils";
 
 import { Item } from "../../admin/items/_components/schema";
 
@@ -96,7 +96,16 @@ function BasicInfoTab({ product }: { product: Product }) {
               <Banknote className="h-4 w-4" />
               Price
             </div>
-            <p className="text-lg font-semibold">{formatPrice(product.price)}</p>
+            <ProductPriceDisplay
+              listPrice={product.price}
+              finalPrice={product.finalPrice ?? product.price}
+              isOnSale={product.isOnSale}
+              discountLabel={product.discountLabel}
+              size="md"
+            />
+            {product.salePrice != null ? (
+              <p className="text-muted-foreground text-xs">Configured sale price: {product.salePrice}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
