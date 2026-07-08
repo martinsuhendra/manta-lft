@@ -44,7 +44,7 @@ export function PublicMobileMenu({
   onSignOut,
 }: PublicMobileMenuProps) {
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
         <Button
           variant="ghost"
